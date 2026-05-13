@@ -45,3 +45,20 @@ export interface EditFolderDialogState {
   open: boolean;
   folderId: string | null;
 }
+
+export interface User {
+  email: string;
+  password: string;
+}
+
+export interface StatusMessage {
+  message: string;
+  type: 'success' | 'error';
+}
+
+export type UserLoginResult = { ok: true; message?: string } | { ok: false; message: string };
+
+export interface UserLoginCredentials {
+  email: string;
+  password: string;
+}

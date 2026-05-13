@@ -37,7 +37,7 @@ export function GenerateSection({
             {canGenerate ? 'Ready when you are.' : selectedFolder === '' ? 'Select a folder first.' : 'Add clothing and pick at least one model.'}
           </Typography>
           <Typography variant="body2" className="text-gray-400">
-            {clothingCount} clothing item{clothingCount !== 1 ? 's' : ''} × {selectedModels} model{selectedModels !== 1 ? 's' : ''} · saves to "{selectedFolder || 'select a folder'}" · optimized lighting, poses & camera angles applied automatically.
+            {`${clothingCount} clothing item${clothingCount !== 1 ? 's' : ''} × ${selectedModels} model${selectedModels !== 1 ? 's' : ''} · saves to "${selectedFolder || 'select a folder'}" · optimized lighting, poses & camera angles applied automatically.`}
           </Typography>
         </div>
         <Button
