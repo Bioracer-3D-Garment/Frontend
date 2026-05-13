@@ -3,6 +3,11 @@
 @source '../components/**/*.{js,ts,jsx,tsx}';
 
 @layer base {
+	/* Keeps viewport width stable when only one route scrolls (avoids navbar/content jumping sideways). */
+	html {
+		scrollbar-gutter: stable;
+	}
+
 	body {
 		background: #ffffff;
 		color: #0a0a0a;
