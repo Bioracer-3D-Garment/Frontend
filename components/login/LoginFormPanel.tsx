@@ -1,15 +1,9 @@
-import { type FormEvent } from 'react';
 import { Typography } from '@mui/material';
+import { UserLoginForm, type UserLoginFormProps } from '@/components/login/UserLoginForm';
 
-interface LoginFormPanelProps {
-  email: string;
-  password: string;
-  onEmailChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}
+export type LoginFormPanelProps = UserLoginFormProps;
 
-export function LoginFormPanel({ email, password, onEmailChange, onPasswordChange, onSubmit }: LoginFormPanelProps) {
+export function LoginFormPanel(props: LoginFormPanelProps) {
   return (
     <div className="flex flex-col justify-between p-10 lg:p-16">
       <div className="flex items-center gap-2">
@@ -29,33 +23,7 @@ export function LoginFormPanel({ email, password, onEmailChange, onPasswordChang
           Generate 3D product imagery & video for the Bioracer webshop.
         </Typography>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => onEmailChange(event.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-600"
-              placeholder="you@company.com"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => onPasswordChange(event.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-600"
-              placeholder="••••••••"
-            />
-          </label>
-
-          <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 mt-2 rounded-md">
-            SIGN IN
-          </button>
-        </form>
+        <UserLoginForm {...props} />
 
         <Typography variant="caption" className="block text-center text-gray-400 mt-8">
           Sign In to enter the studio.
