@@ -4,7 +4,7 @@ export function useAuthRedirects() {
 	const router = useRouter();
 
 	const redirectToHome = () => {
-		router.replace('/');
+		router.replace('/generator');
 	};
 
 	const redirectToLogin = () => {
