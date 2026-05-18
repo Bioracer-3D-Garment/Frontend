@@ -8,10 +8,8 @@ export interface ClothingItem {
 export interface Model {
   id: string;
   name: string;
-  bodyType: string;
-  gender: string;
-  height: string;
-  photo: string;
+  profilePicture: string;
+  photos: string[];
   selected: boolean;
 }
 
