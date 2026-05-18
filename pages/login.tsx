@@ -1,7 +1,7 @@
 import { LoginFormPanel } from '@/components/login/LoginFormPanel';
 import { LoginShowcasePanel } from '@/components/login/LoginShowcasePanel';
 import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
-import AuthService, { saveJwtToken } from '@/service/auth/auth_service';
+import { login, saveJwtToken } from '@/service/auth/auth_service';
 
 type LoginJson = {
 	token?: string;
@@ -16,7 +16,7 @@ export default function LoginPage() {
 		<div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-white">
 			<LoginFormPanel
 				onLogin={async (credentials) => {
-					const response = await AuthService.loginUser(credentials);
+					const response = await login(credentials);
 
 					if (!response.ok) {
 						return { ok: false, message: 'Invalid email or password.' };

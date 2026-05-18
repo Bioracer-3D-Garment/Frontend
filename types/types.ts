@@ -35,6 +35,8 @@ export interface FolderData {
   coverImage: string;
 }
 
+export type Folder = FolderData;
+
 export interface GeneratorStatus {
   open: boolean;
   message: string;

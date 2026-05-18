@@ -1,6 +1,8 @@
 import type { UserLoginCredentials } from '@/types/types';
 
-const loginUser = (credentials: UserLoginCredentials) => {
+export const JWT_STORAGE_KEY = 'bioracer_jwt';
+
+export function login(credentials: UserLoginCredentials) {
 	const base = process.env.NEXT_PUBLIC_API_URL;
 
 	if (!base) {
@@ -17,9 +19,7 @@ const loginUser = (credentials: UserLoginCredentials) => {
 			password: credentials.password,
 		}),
 	});
-};
-
-export const JWT_STORAGE_KEY = 'bioracer_jwt';
+}
 
 export function saveJwtToken(token: string): void {
 	if (typeof window === 'undefined') {
@@ -41,10 +41,3 @@ export function clearJwtToken(): void {
 	}
 	localStorage.removeItem(JWT_STORAGE_KEY);
 }
-
-
-const AuthService = {
-	loginUser,
-};
-
-export default AuthService;
