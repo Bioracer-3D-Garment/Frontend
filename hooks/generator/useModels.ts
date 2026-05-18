@@ -1,20 +1,24 @@
 import { useState } from 'react';
 import type { Model } from '@/types/types';
+import { gerdaModel } from './models/gerda';
+import { patrickModel } from './models/patrick';
+
+const initialModels: Model[] = [patrickModel, gerdaModel];
 
 export function useModels() {
-	const [models, setModels] = useState<Model[]>([]);
+  const [models, setModels] = useState<Model[]>(initialModels);
 
-	const toggleModelSelection = (id: string) => {
-		setModels((currentModels) =>
-			currentModels.map((model) => (model.id === id ? { ...model, selected: !model.selected } : model))
-		);
-	};
+  const toggleModelSelection = (id: number) => {
+    setModels((currentModels) =>
+      currentModels.map((model) => (model.id === id ? { ...model, selected: !model.selected } : model))
+    );
+  };
 
-	const selectedModels = models.filter((model) => model.selected).length;
+  const selectedModels = models.filter((model) => model.selected).length;
 
-	return {
-		models,
-		selectedModels,
-		toggleModelSelection,
-	};
+  return {
+    models,
+    selectedModels,
+    toggleModelSelection,
+  };
 }
