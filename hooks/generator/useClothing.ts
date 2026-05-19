@@ -8,8 +8,8 @@ export function useClothing() {
 	const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
 		const files = event.target.files;
 		if (files && files.length > 0) {
-			const newItems: ClothingItem[] = Array.from(files).map((file) => ({
-				id: `${Date.now()}-${Math.random()}`,
+			const newItems: ClothingItem[] = Array.from(files).map((file, index) => ({
+				id: Date.now() + index,
 				name: file.name.replace(/\.[^/.]+$/, ''),
 				file,
 				preview: URL.createObjectURL(file),
@@ -19,7 +19,7 @@ export function useClothing() {
 		}
 	};
 
-	const removeClothing = (id: string) => {
+	const removeClothing = (id: number) => {
 		setClothing((currentClothing) => {
 			const item = currentClothing.find((clothingItem) => clothingItem.id === id);
 
