@@ -4,11 +4,13 @@ import { createFolder } from '@/utils/folder';
 
 export function useFolders() {
 	const [folders, setFolders] = useState<FolderData[]>([]);
-	const [selectedFolderId, setSelectedFolderId] = useState('');
+	const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
 	const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
 	const [newFolderName, setNewFolderName] = useState('');
 
-	const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
+	const selectedFolder = folders.find(
+		(folder) => folder.id === selectedFolderId,
+	);
 
 	const openCreateFolderDialog = () => setNewFolderDialogOpen(true);
 

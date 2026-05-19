@@ -6,7 +6,7 @@ interface UseGenerationParams {
 	clothingCount: number;
 	selectedModels: number;
 	selectedFolderName: string;
-	selectedFolderId: string;
+	selectedFolderId: number | null;
 }
 
 export function useGeneration({ clothingCount, selectedModels, selectedFolderName, selectedFolderId }: UseGenerationParams) {
@@ -18,7 +18,7 @@ export function useGeneration({ clothingCount, selectedModels, selectedFolderNam
 		severity: 'success',
 	});
 
-	const canGenerate = clothingCount > 0 && selectedModels > 0 && selectedFolderId !== '';
+	const canGenerate = clothingCount > 0 && selectedModels > 0 && selectedFolderId !== null;
 
 	const handleGenerate = () => {
 		const totalAssets = clothingCount * selectedModels;

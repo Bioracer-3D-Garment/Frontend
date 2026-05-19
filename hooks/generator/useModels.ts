@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { Model } from '@/types/types';
-import { gerdaModel } from './models/gerda';
+import { gaelleModel } from './models/gaelle';
 import { patrickModel } from './models/patrick';
 
-const initialModels: Model[] = [patrickModel, gerdaModel];
+const initialModels: Model[] = [patrickModel, gaelleModel];
 
 export function useModels() {
   const [models, setModels] = useState<Model[]>(initialModels);

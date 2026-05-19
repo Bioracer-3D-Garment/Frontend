@@ -4,14 +4,14 @@ import { revokePreviewIfBlob } from '@/utils/preview';
 
 export function useAssetFolders() {
 	const [folders, setFolders] = useState<FolderData[]>([]);
-	const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+	const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
 	const [editDialog, setEditDialog] = useState<EditFolderDialogState>({ open: false, folderId: null });
 	const [editFolderName, setEditFolderName] = useState('');
 	const [editImagePreview, setEditImagePreview] = useState('');
 
 	const selectedFolderData = selectedFolderId ? folders.find((folder) => folder.id === selectedFolderId) : null;
 
-	const openEditDialog = (folderId: string, event: MouseEvent<HTMLButtonElement>) => {
+	const openEditDialog = (folderId: number, event: MouseEvent<HTMLButtonElement>) => {
 		event.stopPropagation();
 		const folder = folders.find((item) => item.id === folderId);
 
