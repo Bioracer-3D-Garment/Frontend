@@ -8,7 +8,7 @@ interface ClothingUploadSectionProps {
   clothing: ClothingItem[];
   subtitle: string;
   onFileUpload: (event: ChangeEvent<HTMLInputElement>) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: number) => void;
 }
 
 export function ClothingUploadSection({ clothing, subtitle, onFileUpload, onRemove }: ClothingUploadSectionProps) {
