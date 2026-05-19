@@ -5,9 +5,9 @@ import { SectionHeader } from '../SectionHeader';
 import { getHighlightedParts } from '../generatorUtils';
 
 interface FolderSelectorSectionProps {
-	selectedFolderId: string;
+	selectedFolderId: number | null;
 	folders: FolderData[];
-	onSelectedFolderIdChange: (folderId: string) => void;
+	onSelectedFolderIdChange: (folderId: number | null) => void;
 	onCreateFolder: () => void;
 }
 
@@ -31,7 +31,7 @@ export function FolderSelectorSection({
 				<Autocomplete<FolderData, false, false, false>
 					fullWidth
 					value={selectedFolder ?? null}
-					onChange={(_, newValue) => onSelectedFolderIdChange(newValue?.id ?? '')}
+					onChange={(_, newValue) => onSelectedFolderIdChange(newValue?.id ?? null)}
 					options={folders}
 					getOptionLabel={(option) => option.name}
 					isOptionEqualToValue={(option, value) => option.id === value.id}

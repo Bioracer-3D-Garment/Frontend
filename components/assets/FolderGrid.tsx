@@ -5,8 +5,8 @@ import type { FolderData } from '@/types/types';
 
 interface FolderGridProps {
   folders: FolderData[];
-  onOpenFolder: (folderId: string) => void;
-  onEditFolder: (folderId: string, event: MouseEvent<HTMLButtonElement>) => void;
+  onOpenFolder: (folderId: number) => void;
+  onEditFolder: (folderId: number, event: MouseEvent<HTMLButtonElement>) => void;
 }
 
 export function FolderGrid({ folders, onOpenFolder, onEditFolder }: FolderGridProps) {

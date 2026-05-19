@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Asset } from '@/types/types';
 
-export function useAssets(selectedFolderId: string | null) {
+export function useAssets(selectedFolderId: number | null) {
 	const [assets] = useState<Asset[]>([]);
 	const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
 

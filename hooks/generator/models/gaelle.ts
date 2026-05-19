@@ -1,9 +1,9 @@
 import type { Model } from '@/types/types';
 
-export const gerdaModel: Model = {
+export const gaelleModel: Model = {
 	id: 1,
-	name: 'Gerda',
-	profilePicture: '/Gerda/gerda.png',
+	name: 'Gaëlle',
+	profilePicture: '/Gaelle/gaelle.png',
 	gender: 'female',
 	selected: false,
 };

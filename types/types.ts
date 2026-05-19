@@ -22,7 +22,7 @@ export interface Asset {
   clothing: string;
   model: string;
   thumbnail: string;
-  folderId: string;
+  folderId: number;
 }
 
 export interface FolderData {
@@ -43,7 +43,7 @@ export interface GeneratorStatus {
 
 export interface EditFolderDialogState {
   open: boolean;
-  folderId: string | null;
+  folderId: number | null;
 }
 
 export interface User {
