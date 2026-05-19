@@ -1,22 +1,20 @@
 export interface ClothingItem {
-  id: string;
+  id: number
   name: string;
   file: File;
   preview: string;
 }
 
 export interface Model {
-  id: string;
+  id: number;
   name: string;
-  bodyType: string;
-  gender: string;
-  height: string;
-  photo: string;
+  profilePicture: string;
+  gender: 'male' | 'female';
   selected: boolean;
 }
 
 export interface Asset {
-  id: string;
+  id: number;
   name: string;
   type: 'image' | 'video';
   size: string;
@@ -28,12 +26,14 @@ export interface Asset {
 }
 
 export interface FolderData {
-  id: string;
+  id: number;
   name: string;
   date: string;
   itemCount: number;
   coverImage: string;
 }
+
+export type Folder = FolderData;
 
 export interface GeneratorStatus {
   open: boolean;
