@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 
-interface NewFolderDialogProps {
+interface NewProjectDialogProps {
   open: boolean;
   name: string;
   onNameChange: (value: string) => void;
@@ -8,15 +8,15 @@ interface NewFolderDialogProps {
   onClose: () => void;
 }
 
-export function NewFolderDialog({ open, name, onNameChange, onCreate, onClose }: NewFolderDialogProps) {
+export function NewProjectDialog({ open, name, onNameChange, onCreate, onClose }: NewProjectDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle className="font-bold">Create New Folder</DialogTitle>
+      <DialogTitle className="font-bold">Create New Project</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
           margin="dense"
-          label="Folder name"
+          label="Project name"
           type="text"
           fullWidth
           variant="outlined"

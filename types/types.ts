@@ -22,10 +22,10 @@ export interface Asset {
   clothing: string;
   model: string;
   thumbnail: string;
-  folderId: number;
+  projectId: number;
 }
 
-export interface FolderData {
+export interface Project {
   id: number;
   name: string;
   date: string;
@@ -33,7 +33,6 @@ export interface FolderData {
   coverImage: string;
 }
 
-export type Folder = FolderData;
 
 export interface GeneratorStatus {
   open: boolean;
@@ -41,9 +40,9 @@ export interface GeneratorStatus {
   severity: 'success' | 'info';
 }
 
-export interface EditFolderDialogState {
+export interface EditProjectDialogState {
   open: boolean;
-  folderId: number | null;
+  projectId: number | null;
 }
 
 export interface User {

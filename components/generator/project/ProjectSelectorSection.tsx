@@ -1,38 +1,38 @@
 import { Autocomplete, Button, TextField, Typography } from '@mui/material';
 import { Add, Search } from '@mui/icons-material';
-import type { FolderData } from '@/types/types';
+import type { Project } from '@/types/types';
 import { SectionHeader } from '../SectionHeader';
 import { getHighlightedParts } from '../generatorUtils';
 
-interface FolderSelectorSectionProps {
-	selectedFolderId: number | null;
-	folders: FolderData[];
-	onSelectedFolderIdChange: (folderId: number | null) => void;
-	onCreateFolder: () => void;
+interface ProjectSelectorSectionProps {
+	selectedProjectId: number | null;
+	projects: Project[];
+	onSelectProject: (projectId: number | null) => void;
+	onCreateProject: () => void;
 }
 
-export function FolderSelectorSection({
-	selectedFolderId,
-	folders,
-	onSelectedFolderIdChange,
-	onCreateFolder,
-}: FolderSelectorSectionProps) {
-	const selectedFolder = folders.find((folder) => folder.id === selectedFolderId);
+export function ProjectSelectorSection({
+	selectedProjectId,
+	projects,
+	onSelectProject,
+	onCreateProject,
+}: ProjectSelectorSectionProps) {
+	const selectedProject = projects.find((project) => project.id === selectedProjectId);
 
 	return (
 		<section>
 			<SectionHeader
 				step="01"
-				title="Select Destination Folder"
-				subtitle={selectedFolder?.name ?? 'No folder selected'}
+				title="Select Destination Project"
+				subtitle={selectedProject?.name ?? 'No project selected'}
 			/>
 
 			<div className="flex gap-3">
-				<Autocomplete<FolderData, false, false, false>
+				<Autocomplete<Project, false, false, false>
 					fullWidth
-					value={selectedFolder ?? null}
-					onChange={(_, newValue) => onSelectedFolderIdChange(newValue?.id ?? null)}
-					options={folders}
+					value={selectedProject ?? null}
+					onChange={(_, newValue) => onSelectProject(newValue?.id ?? null)}
+					options={projects}
 					getOptionLabel={(option) => option.name}
 					isOptionEqualToValue={(option, value) => option.id === value.id}
 					className="[&_.MuiInputLabel-root.Mui-focused]:!text-[#e2001a] [&_.MuiOutlinedInput-root.Mui-focused_.MuiOutlinedInput-notchedOutline]:!border-[#e2001a] [&_.MuiOutlinedInput-root.Mui-focused_input::placeholder]:!text-[#e2001a] [&_.MuiOutlinedInput-root.Mui-focused_.MuiAutocomplete-popupIndicator]:!text-[#e2001a] [&_.MuiOutlinedInput-root.Mui-focused_.MuiAutocomplete-popupIndicator_.MuiSvgIcon-root]:!text-[#e2001a]"
@@ -50,7 +50,7 @@ export function FolderSelectorSection({
 					renderInput={(params) => (
 						<TextField
 							{...params}
-							label="Search folder"
+							label="Search project"
 							placeholder="Type to search..."
 							variant="outlined"
 							className="bg-white"
@@ -79,10 +79,10 @@ export function FolderSelectorSection({
 				<Button
 					variant="outlined"
 					startIcon={<Add />}
-					onClick={onCreateFolder}
+					onClick={onCreateProject}
 					className="whitespace-nowrap !min-h-[56px] !min-w-[170px] !px-6 !font-bold !text-[#0a0a0a] !border-black tracking-widest transition-all hover:!border-[#e2001a] hover:!bg-[#e2001a] hover:!text-white hover:scale-[1.03] [&_.MuiButton-startIcon]:!text-current [&_.MuiButton-startIcon_.MuiSvgIcon-root]:!text-current hover:[&_.MuiButton-startIcon]:!text-white hover:[&_.MuiButton-startIcon_.MuiSvgIcon-root]:!text-white"
 				>
-					NEW FOLDER
+					NEW PROJECT
 				</Button>
 			</div>
 		</section>

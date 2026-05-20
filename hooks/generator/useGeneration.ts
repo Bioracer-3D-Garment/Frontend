@@ -5,11 +5,11 @@ import type { GeneratorStatus } from '@/types/types';
 interface UseGenerationParams {
 	clothingCount: number;
 	selectedModels: number;
-	selectedFolderName: string;
-	selectedFolderId: number | null;
+	selectedProjectName: string;
+	selectedProjectId: number | null;
 }
 
-export function useGeneration({ clothingCount, selectedModels, selectedFolderName, selectedFolderId }: UseGenerationParams) {
+export function useGeneration({ clothingCount, selectedModels, selectedProjectName, selectedProjectId }: UseGenerationParams) {
 	const router = useRouter();
 	const [generating, setGenerating] = useState(false);
 	const [status, setStatus] = useState<GeneratorStatus>({
@@ -18,7 +18,7 @@ export function useGeneration({ clothingCount, selectedModels, selectedFolderNam
 		severity: 'success',
 	});
 
-	const canGenerate = clothingCount > 0 && selectedModels > 0 && selectedFolderId !== null;
+	const canGenerate = clothingCount > 0 && selectedModels > 0 && selectedProjectId !== null;
 
 	const handleGenerate = () => {
 		const totalAssets = clothingCount * selectedModels;
@@ -29,7 +29,7 @@ export function useGeneration({ clothingCount, selectedModels, selectedFolderNam
 			setGenerating(false);
 			setStatus({
 				open: true,
-				message: `${totalAssets} asset${totalAssets !== 1 ? 's' : ''} generated successfully in "${selectedFolderName || 'folder'}". Click here to view.`,
+				message: `${totalAssets} asset${totalAssets !== 1 ? 's' : ''} generated successfully in "${selectedProjectName || 'project'}". Click here to view.`,
 				severity: 'success',
 			});
 		}, 2000);

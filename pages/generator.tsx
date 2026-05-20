@@ -1,27 +1,27 @@
 import { Typography } from '@mui/material';
 import { Navbar } from '@/components/Navbar';
 import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
-import { FolderSelectorSection } from '@/components/generator/folder/FolderSelectorSection';
+import { ProjectSelectorSection } from '@/components/generator/project/ProjectSelectorSection';
 import { ClothingUploadSection } from '@/components/generator/clothing/ClothingUploadSection';
 import { ModelSelectionSection } from '@/components/generator/model/ModelSelectionSection';
 import { GenerateSection } from '@/components/generator/generation/GenerateSection';
 import { GenerationFeedback } from '@/components/generator/generation/GenerationFeedback';
-import { NewFolderDialog } from '@/components/generator/folder/NewFolderDialog';
+import { NewProjectDialog } from '@/components/generator/project/NewProjectDialog';
 import { useClothing } from '@/hooks/generator/useClothing';
-import { useFolders } from '@/hooks/generator/useFolders';
+import { useProjects } from '@/hooks/generator/useFolders';
 import { useModels } from '@/hooks/generator/useModels';
 import { useGeneration } from '@/hooks/generator/useGeneration';
 
 export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
 	const { clothing, handleFileUpload, removeClothing } = useClothing();
-	const folders = useFolders();
+	const { projects, selectedProjectId, selectedProject, setSelectedProjectId, openCreateProjectDialog, dialog } = useProjects();
 	const { models, selectedModels, toggleModelSelection } = useModels();
 	const generation = useGeneration({
 		clothingCount: clothing.length,
 		selectedModels,
-		selectedFolderName: folders.selectedFolder?.name ?? '',
-		selectedFolderId: folders.selectedFolderId,
+		selectedProjectName: selectedProject?.name ?? '',
+		selectedProjectId: selectedProjectId,
 	});
 
 	return (
@@ -46,11 +46,11 @@ export default function GeneratorPage() {
 			</div>
 
 			<div className="max-w-7xl mx-auto px-8 py-12 space-y-12">
-				<FolderSelectorSection
-					selectedFolderId={folders.selectedFolderId}
-					folders={folders.folders}
-					onSelectedFolderIdChange={folders.onSelectedFolderIdChange}
-					onCreateFolder={folders.onCreateFolder}
+				<ProjectSelectorSection
+					selectedProjectId={selectedProjectId}
+					projects={projects}
+					onSelectProject={setSelectedProjectId}
+					onCreateProject={openCreateProjectDialog}
 				/>
 
 				<ClothingUploadSection
@@ -65,7 +65,7 @@ export default function GeneratorPage() {
 				<GenerateSection
 					clothingCount={clothing.length}
 					selectedModels={selectedModels}
-					selectedFolderName={folders.selectedFolder?.name ?? ''}
+					selectedProjectName={selectedProject?.name ?? ''}
 					generating={generation.generating}
 					canGenerate={generation.canGenerate}
 					onGenerate={generation.handleGenerate}
@@ -74,7 +74,7 @@ export default function GeneratorPage() {
 
 			<GenerationFeedback status={generation.status} onClose={generation.closeStatus} onClick={generation.handleSnackbarClick} />
 
-			<NewFolderDialog {...folders.dialog} />
+			<NewProjectDialog {...dialog} />
 		</div>
 	);
 }
