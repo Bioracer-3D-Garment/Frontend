@@ -1,8 +1,26 @@
+export type GarmentCategory = 'top' | 'bottom';
+
 export interface ClothingItem {
-  id: number
+  id: number;
   name: string;
   file: File;
   preview: string;
+  category: GarmentCategory;
+}
+
+export interface PoseOption {
+  id: string;
+  label: string;
+  thumbnailUrl: string;
+  selected: boolean;
+}
+
+export interface BatchStatus {
+  jobId: string;
+  status: 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
+  completed: number;
+  total: number;
+  failedItems: { productId: string; poseId: string; reason: string }[];
 }
 
 export interface Model {
@@ -33,11 +51,10 @@ export interface Project {
   coverImage: string;
 }
 
-
 export interface GeneratorStatus {
   open: boolean;
   message: string;
-  severity: 'success' | 'info';
+  severity: 'success' | 'info' | 'error';
 }
 
 export interface EditProjectDialogState {
