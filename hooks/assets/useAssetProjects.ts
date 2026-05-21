@@ -1,87 +1,118 @@
-import { useState, type ChangeEvent } from 'react';
-import type { Project } from '@/types/types';
-import type { EditProjectDialogState } from '@/types/types';
-import { revokePreviewIfBlob } from '@/utils/preview';
-import ProjectService from '@/service/project/projectService';
-
+import { useState, type ChangeEvent } from "react";
+import type { Project } from "@/types/types";
+import type { EditProjectDialogState } from "@/types/types";
+import { revokePreviewIfBlob } from "@/utils/preview";
+import ProjectService from "@/service/project/projectService";
+import { uploadToCloudinary } from "@/utils/cloudinary";
 
 export function useAssetProjects(
-	injectedProjectService: ProjectService = new ProjectService(),
-	onProjectUpdated?: (project: Project) => void,
+  injectedProjectService: ProjectService = new ProjectService(),
+  onProjectUpdated?: (project: Project) => void,
 ) {
-	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-	const [editDialog, setEditDialog] = useState<EditProjectDialogState>({ open: false, projectId: null });
-	const [editProject, setEditProject] = useState<Project | null>(null);
-	const [editProjectName, setEditProjectName] = useState('');
-	const [editImagePreview, setEditImagePreview] = useState('');
-	const [projectService] = useState(() => injectedProjectService);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+    null,
+  );
 
+  const [editDialog, setEditDialog] = useState<EditProjectDialogState>({
+    open: false,
+    projectId: null,
+  });
 
-	const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-		const file = event.target.files?.[0];
+  const [editProject, setEditProject] = useState<Project | null>(null);
+  const [editProjectName, setEditProjectName] = useState("");
 
-		if (!file) {
-			return;
-		}
+  // shows preview OR existing image
+  const [editImagePreview, setEditImagePreview] = useState("");
 
-		revokePreviewIfBlob(editImagePreview);
+  // IMPORTANT: store selected FILE, not upload result
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-		const preview = URL.createObjectURL(file);
-		setEditImagePreview(preview);
-	};
+  const [isUploading, setIsUploading] = useState(false);
 
-	const closeEditDialog = () => {
-		revokePreviewIfBlob(editImagePreview);
+  const [projectService] = useState(() => injectedProjectService);
 
-		setEditDialog({ open: false, projectId: null });
-		setEditProject(null);
-		setEditProjectName('');
-		setEditImagePreview('');
-	};
+  const handleImageFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-	const openEditDialog = (project: Project) => {
-		setEditDialog({ open: true, projectId: project.id });
-		setEditProject(project);
-		setEditProjectName(project.name);
-		setEditImagePreview(project.coverImage);
-	};
-	
-	const onSave = async () => {
-		if (!editProject) {
-			return;
-		}
+    revokePreviewIfBlob(editImagePreview);
 
-		const updatedProject: Project = {
-			...editProject,
-			name: editProjectName,
-			coverImage: editImagePreview,
-		};
+    // ONLY local preview
+    const preview = URL.createObjectURL(file);
+    setEditImagePreview(preview);
 
-		try {
-			const saved = await projectService.updateProjectDetails(editDialog.projectId!, {
-				...updatedProject,
-			});
+    // store file for later upload
+    setSelectedFile(file);
+  };
 
-			if (onProjectUpdated) onProjectUpdated(saved);
-		} catch (err) {
-			return String('Failed to update project.');
-		}
+  const openEditDialog = (project: Project) => {
+    setEditDialog({ open: true, projectId: project.id });
+    setEditProject(project);
+    setEditProjectName(project.name);
 
-		closeEditDialog();
-	};
+    setEditImagePreview(project.coverImage);
+    setSelectedFile(null);
+  };
 
-	return {
-		selectedProjectId,
-		setSelectedProjectId,
-		openEditDialog,
-		editDialog: {
-			open: editDialog.open,
-			projectName: editProjectName,
-			projectImagePreview: editImagePreview,
-			onProjectNameChange: setEditProjectName,
-			onImageFileChange: handleImageFileChange,
-			onClose: closeEditDialog,
-			onSave,
-		},
-	};
+  const closeEditDialog = () => {
+    revokePreviewIfBlob(editImagePreview);
+
+    setEditDialog({ open: false, projectId: null });
+    setEditProject(null);
+    setEditProjectName("");
+    setEditImagePreview("");
+    setSelectedFile(null);
+  };
+
+  const onSave = async () => {
+    if (!editProject) return;
+
+    setIsUploading(true);
+
+    try {
+      let coverImage = editProject.coverImage;
+
+      // ONLY upload if user selected a new file
+      if (selectedFile) {
+        const publicId = await uploadToCloudinary(selectedFile);
+        coverImage = publicId;
+      }
+
+      const updatedProject: Project = {
+        ...editProject,
+        name: editProjectName,
+        coverImage,
+      };
+
+      const saved = await projectService.updateProjectDetails(
+        editDialog.projectId!,
+        updatedProject,
+      );
+
+      if (onProjectUpdated) onProjectUpdated(saved);
+    } catch (err) {
+      console.error("Failed to update project:", err);
+    } finally {
+      setIsUploading(false);
+      closeEditDialog();
+    }
+  };
+
+  return {
+    selectedProjectId,
+    setSelectedProjectId,
+
+    openEditDialog,
+
+    editDialog: {
+      open: editDialog.open,
+      projectName: editProjectName,
+      projectImagePreview: editImagePreview,
+      onProjectNameChange: setEditProjectName,
+      onImageFileChange: handleImageFileChange,
+      onClose: closeEditDialog,
+      onSave,
+      isUploading,
+    },
+  };
 }
