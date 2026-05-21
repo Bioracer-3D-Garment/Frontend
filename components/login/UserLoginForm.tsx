@@ -16,7 +16,6 @@ export interface UserLoginFormProps {
 
 export function UserLoginForm({
   onLogin,
-  title = 'Sign in',
   emailLabel = 'Email',
   passwordLabel = 'Password',
   submitLabel = 'Sign in',
@@ -87,9 +86,6 @@ export function UserLoginForm({
 
   return (
     <div className="space-y-6">
-      <Typography variant="h5" component="h2" className="font-extrabold text-black">
-        {title}
-      </Typography>
 
       {statusMessages.length > 0 && (
         <ul className="list-none space-y-1 m-0 p-0" role="status">
