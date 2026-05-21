@@ -4,7 +4,7 @@ import { AutoAwesome } from '@mui/icons-material';
 interface GenerateSectionProps {
   clothingCount: number;
   selectedModels: number;
-  selectedFolderName: string;
+  selectedProjectName: string;
   generating: boolean;
   canGenerate: boolean;
   onGenerate: () => void;
@@ -13,7 +13,7 @@ interface GenerateSectionProps {
 export function GenerateSection({
   clothingCount,
   selectedModels,
-  selectedFolderName,
+  selectedProjectName,
   generating,
   canGenerate,
   onGenerate,
@@ -34,10 +34,10 @@ export function GenerateSection({
             </Typography>
           </div>
           <Typography variant="h4" className="font-extrabold mb-1">
-            {canGenerate ? 'Ready when you are.' : selectedFolderName === '' ? 'Select a folder first.' : 'Add clothing and pick at least one model.'}
+            {canGenerate ? 'Ready when you are.' : selectedProjectName === '' ? 'Select a project first.' : 'Add clothing and pick at least one model.'}
           </Typography>
           <Typography variant="body2" className="text-gray-400">
-            {`${clothingCount} clothing item${clothingCount !== 1 ? 's' : ''} × ${selectedModels} model${selectedModels !== 1 ? 's' : ''} · saves to "${selectedFolderName || 'select a folder'}" · optimized lighting, poses & camera angles applied automatically.`}
+            {`${clothingCount} clothing item${clothingCount !== 1 ? 's' : ''} × ${selectedModels} model${selectedModels !== 1 ? 's' : ''} · saves to "${selectedProjectName || 'select a project'}" · optimized lighting, poses & camera angles applied automatically.`}
           </Typography>
         </div>
         <Button

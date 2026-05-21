@@ -1,54 +1,60 @@
 import { useState } from 'react';
-import type { FolderData } from '@/types/types';
-import { createFolder } from '@/utils/folder';
+import type { Project } from '@/types/types';
+import { createProject } from '@/utils/folder';
+import ProjectService from '@/service/project/projectService';
 
-export function useFolders() {
-	const [folders, setFolders] = useState<FolderData[]>([]);
-	const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
-	const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
-	const [newFolderName, setNewFolderName] = useState('');
+export function useProjects() {
+	const [projects, setProjects] = useState<Project[]>([]);
+	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+	const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
+	const [newProjectName, setNewProjectName] = useState('');
 
-	const selectedFolder = folders.find(
-		(folder) => folder.id === selectedFolderId,
+	const selectedProject = projects.find(
+		(project) => project.id === selectedProjectId,
 	);
 
-	const openCreateFolderDialog = () => setNewFolderDialogOpen(true);
+	const projectService = new ProjectService();
 
-	const closeCreateFolderDialog = () => setNewFolderDialogOpen(false);
-
-	const handleCreateFolder = () => {
-		const trimmedName = newFolderName.trim();
+	const handleCreateProject = async () => {
+		const trimmedName = newProjectName.trim();
 
 		if (!trimmedName) {
 			return;
 		}
 
-		const existing = folders.find((folder) => folder.name.toLowerCase() === trimmedName.toLowerCase());
+		const existing = projects.find((project) => project.name.toLowerCase() === trimmedName.toLowerCase());
 
 		if (existing) {
-			setSelectedFolderId(existing.id);
+			setSelectedProjectId(existing.id);
 		} else {
-			const folder = createFolder(trimmedName);
-			setFolders((currentFolders) => [...currentFolders, folder]);
-			setSelectedFolderId(folder.id);
+			try {
+				const project = await projectService.createProject(trimmedName);
+				setProjects((currentProjects) => [...currentProjects, project]);
+				setSelectedProjectId(project.id);
+			} catch (err) {
+				console.error('Failed to create project via API, falling back to local creation', err);
+				const project = createProject(trimmedName);
+				setProjects((currentProjects) => [...currentProjects, project]);
+				setSelectedProjectId(project.id);
+			}
 		}
 
-		setNewFolderName('');
-		setNewFolderDialogOpen(false);
+		setNewProjectName('');
+		setNewProjectDialogOpen(false);
 	};
 
 	return {
-		folders,
-		selectedFolderId,
-		selectedFolder,
-		onSelectedFolderIdChange: setSelectedFolderId,
-		onCreateFolder: openCreateFolderDialog,
+		projects,
+		selectedProjectId,
+		selectedProject,
+		setSelectedProjectId,
+		openCreateProjectDialog: () => setNewProjectDialogOpen(true),
 		dialog: {
-			open: newFolderDialogOpen,
-			name: newFolderName,
-			onNameChange: setNewFolderName,
-			onCreate: handleCreateFolder,
-			onClose: closeCreateFolderDialog,
+			open: newProjectDialogOpen,
+			name: newProjectName,
+			onNameChange: setNewProjectName,
+			onCreate: handleCreateProject,
+			onClose: () => setNewProjectDialogOpen(false),
 		},
 	};
 }

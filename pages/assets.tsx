@@ -1,17 +1,52 @@
+import { useEffect, useState } from 'react';
 import { Typography, Button } from '@mui/material';
 import { Download, ArrowBack } from '@mui/icons-material';
 import { Navbar } from '@/components/Navbar';
 import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
-import { FolderGrid } from '@/components/assets/FolderGrid';
+import { ProjectGrid } from '@/components/assets/ProjectGrid';
 import { AssetGrid } from '@/components/assets/AssetGrid';
-import { EditFolderDialog } from '@/components/assets/EditFolderDialog';
+import { EditProjectDialog } from '@/components/assets/EditProjectDialog';
 import { useAssets } from '@/hooks/assets/useAssets';
-import { useAssetFolders } from '@/hooks/assets/useAssetFolders';
+import { useAssetProjects } from '@/hooks/assets/useAssetProjects';
+import type { Project } from '@/types/types';
+import ProjectService from '@/service/project/projectService';
 
 export default function AssetsPage() {
 	const { redirectToLogin } = useAuthRedirects();
-	const folderState = useAssetFolders();
-	const { assets, filter, setFilter, filteredAssets, filters } = useAssets(folderState.selectedFolderId);
+	const [projects, setProjects] = useState<Project[]>([]);
+	const projectService = new ProjectService();
+
+	const { selectedProjectId, setSelectedProjectId, openEditDialog, editDialog } = useAssetProjects(
+		projectService,
+		(updated) => setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+	);
+    
+	const [loadingProjects, setLoadingProjects] = useState(true);
+	const [projectError, setProjectError] = useState('');
+	const { assets, filter, setFilter, filteredAssets, filters } = useAssets(selectedProjectId);
+
+	useEffect(() => {
+		projectService
+			.getAllProjects()
+			.then((projectList) => {
+				setProjects(projectList);
+			})
+			.catch(() => {
+				setProjectError('Failed to load projects.');
+			})
+			.finally(() => {
+				setLoadingProjects(false);
+			});
+	}, []);
+
+	const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
+
+	const handleEditProject = (projectId: number) => {
+		const projectToEdit = projects.find((p) => p.id === projectId);
+		if (projectToEdit) {
+			openEditDialog(projectToEdit);
+		}
+	};
 
 	return (
 		<div className="min-h-screen bg-gray-50">
@@ -23,19 +58,24 @@ export default function AssetsPage() {
 						<div className="flex items-center gap-2 mb-3">
 							<span className="inline-block w-8 h-0.75 bg-[#e2001a]" />
 							<Typography variant="overline" className="text-[#e2001a] font-bold tracking-[0.2em]">
-								LIBRARY
+								PROJECTS
 							</Typography>
 						</div>
 						<Typography variant="h3" className="font-extrabold text-black">
-							{folderState.selectedFolderId ? folderState.selectedFolderData?.name : 'Assets'}
+							{selectedProject ? selectedProject.name : 'Projects'}
 						</Typography>
 						<Typography variant="body1" className="text-gray-500 mt-1">
-							{folderState.selectedFolderId
-								? `${filteredAssets.length} asset${filteredAssets.length !== 1 ? 's' : ''} in this folder.`
-								: `${folderState.folders.length} folder${folderState.folders.length !== 1 ? 's' : ''} · ${assets.length} total assets.`}
+							{selectedProject
+								? `${filteredAssets.length} asset${filteredAssets.length !== 1 ? 's' : ''} in this project.`
+								: `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${assets.length} total assets.`}
 						</Typography>
+						{projectError && (
+							<Typography variant="body2" className="text-red-600 mt-2">
+								{projectError}
+							</Typography>
+						)}
 					</div>
-					{folderState.selectedFolderId && (
+					{selectedProject && (
 						<Button
 							variant="contained"
 							startIcon={<Download />}
@@ -48,17 +88,17 @@ export default function AssetsPage() {
 			</div>
 
 			<div className="max-w-7xl mx-auto px-8 py-10">
-				{folderState.selectedFolderId && (
+				{selectedProject && (
 					<button
-						onClick={() => folderState.setSelectedFolderId(null)}
+						onClick={() => setSelectedProjectId(null)}
 						className="flex items-center gap-2 mb-6 text-sm font-bold tracking-wider text-gray-600 hover:text-[#e2001a] transition-all hover:-translate-x-1"
 					>
 						<ArrowBack fontSize="small" />
-						BACK TO FOLDERS
+						BACK TO PROJECTS
 					</button>
 				)}
 
-				{folderState.selectedFolderId && (
+				{selectedProject && (
 					<div className="flex gap-2 mb-8 border-b border-gray-200">
 						{filters.map((item) => (
 							<button
@@ -75,17 +115,20 @@ export default function AssetsPage() {
 					</div>
 				)}
 
-				{!folderState.selectedFolderId && (
-					<FolderGrid
-						folders={folderState.folders}
-						onOpenFolder={folderState.setSelectedFolderId}
-						onEditFolder={folderState.openEditDialog}
-					/>
-				)}
-				{folderState.selectedFolderId && <AssetGrid assets={filteredAssets} />}
-			</div>
+				{!selectedProject && !loadingProjects && (
+				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} />
+			)}
 
-			<EditFolderDialog {...folderState.editDialog} />
-		</div>
+				{selectedProject && <AssetGrid assets={filteredAssets} />}
+			</div>
+		<EditProjectDialog
+			open={editDialog.open}
+			projectName={editDialog.projectName}
+			projectImagePreview={editDialog.projectImagePreview}
+			onProjectNameChange={editDialog.onProjectNameChange}
+			onImageFileChange={editDialog.onImageFileChange}
+			onClose={editDialog.onClose}
+			onSave={editDialog.onSave}
+		/>		</div>
 	);
 }
