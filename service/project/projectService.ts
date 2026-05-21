@@ -46,6 +46,24 @@ class ProjectService {
 		const data = await response.json();
 		return data as Project;
 	}
+
+	public async updateProjectDetails(projectId: number, project: Project): Promise<Project> {
+		const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`;
+		const response = await fetch(url, {
+			method: 'PUT',
+			headers: this.getAuthHeaders(),
+			// send the project object directly (server typically expects the resource body),
+			// not wrapped inside a `project` key
+			body: JSON.stringify(project),
+		});
+
+		if (!response.ok) {
+			throw new Error('Failed to update project');
+		}
+
+		const data = await response.json();
+		return data as Project;
+	}
 }
 
 export default ProjectService;

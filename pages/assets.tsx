@@ -5,21 +5,27 @@ import { Navbar } from '@/components/Navbar';
 import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
 import { ProjectGrid } from '@/components/assets/ProjectGrid';
 import { AssetGrid } from '@/components/assets/AssetGrid';
+import { EditProjectDialog } from '@/components/assets/EditProjectDialog';
 import { useAssets } from '@/hooks/assets/useAssets';
+import { useAssetProjects } from '@/hooks/assets/useAssetProjects';
 import type { Project } from '@/types/types';
 import ProjectService from '@/service/project/projectService';
 
 export default function AssetsPage() {
 	const { redirectToLogin } = useAuthRedirects();
 	const [projects, setProjects] = useState<Project[]>([]);
-	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+	const projectService = new ProjectService();
+
+	const { selectedProjectId, setSelectedProjectId, openEditDialog, editDialog } = useAssetProjects(
+		projectService,
+		(updated) => setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+	);
+    
 	const [loadingProjects, setLoadingProjects] = useState(true);
 	const [projectError, setProjectError] = useState('');
 	const { assets, filter, setFilter, filteredAssets, filters } = useAssets(selectedProjectId);
 
 	useEffect(() => {
-		const projectService = new ProjectService();
-
 		projectService
 			.getAllProjects()
 			.then((projectList) => {
@@ -34,6 +40,13 @@ export default function AssetsPage() {
 	}, []);
 
 	const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
+
+	const handleEditProject = (projectId: number) => {
+		const projectToEdit = projects.find((p) => p.id === projectId);
+		if (projectToEdit) {
+			openEditDialog(projectToEdit);
+		}
+	};
 
 	return (
 		<div className="min-h-screen bg-gray-50">
@@ -103,10 +116,19 @@ export default function AssetsPage() {
 				)}
 
 				{!selectedProject && !loadingProjects && (
-					<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} />
-				)}
+				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} />
+			)}
+
 				{selectedProject && <AssetGrid assets={filteredAssets} />}
 			</div>
-		</div>
+		<EditProjectDialog
+			open={editDialog.open}
+			projectName={editDialog.projectName}
+			projectImagePreview={editDialog.projectImagePreview}
+			onProjectNameChange={editDialog.onProjectNameChange}
+			onImageFileChange={editDialog.onImageFileChange}
+			onClose={editDialog.onClose}
+			onSave={editDialog.onSave}
+		/>		</div>
 	);
 }
