@@ -14,14 +14,14 @@ import { useGeneration } from '@/hooks/generator/useGeneration';
 
 export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
-	const { clothing, handleFileUpload, removeClothing } = useClothing();
+	const { clothing, handleFileUpload, removeClothing, toggleCategory } = useClothing();
 	const { projects, selectedProjectId, selectedProject, setSelectedProjectId, openCreateProjectDialog, dialog } = useProjects();
-	const { models, selectedModels, toggleModelSelection } = useModels();
+	const { models, selectedModel, selectedGender, selectModel } = useModels();
 	const generation = useGeneration({
-		clothingCount: clothing.length,
-		selectedModels,
+		clothing,
+		selectedGender,
 		selectedProjectName: selectedProject?.name ?? '',
-		selectedProjectId: selectedProjectId,
+		selectedProjectId,
 	});
 
 	return (
@@ -40,7 +40,7 @@ export default function GeneratorPage() {
 						Create studio-quality visuals.
 					</Typography>
 					<Typography variant="body1" className="text-gray-500 max-w-2xl">
-						Upload your cycling apparel, choose the models, and we&apos;ll render product images and 360° videos with pre-configured poses, lighting and camera angles.
+						Upload your cycling apparel, choose your model, and we&apos;ll render product images with pre-configured poses, lighting and camera angles.
 					</Typography>
 				</div>
 			</div>
@@ -58,15 +58,21 @@ export default function GeneratorPage() {
 					subtitle={`${clothing.length} item${clothing.length !== 1 ? 's' : ''} added`}
 					onFileUpload={handleFileUpload}
 					onRemove={removeClothing}
+					onToggleCategory={toggleCategory}
 				/>
 
-				<ModelSelectionSection models={models} subtitle={`${selectedModels} selected`} onToggleModel={toggleModelSelection} />
+				<ModelSelectionSection
+					models={models}
+					subtitle={selectedModel?.name ?? 'None selected'}
+					onToggleModel={selectModel}
+				/>
 
 				<GenerateSection
 					clothingCount={clothing.length}
-					selectedModels={selectedModels}
+					selectedGender={selectedGender ?? ''}
 					selectedProjectName={selectedProject?.name ?? ''}
 					generating={generation.generating}
+					progress={generation.progress}
 					canGenerate={generation.canGenerate}
 					onGenerate={generation.handleGenerate}
 				/>

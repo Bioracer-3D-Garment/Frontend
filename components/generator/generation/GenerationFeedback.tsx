@@ -1,11 +1,28 @@
 import { Alert, Snackbar } from '@mui/material';
-import { AutoAwesome, Check } from '@mui/icons-material';
+import { AutoAwesome, Check, ErrorOutline } from '@mui/icons-material';
 import type { GeneratorStatus } from '@/types/types';
 
 interface GenerationFeedbackProps {
   status: GeneratorStatus;
   onClose: () => void;
   onClick: () => void;
+}
+
+function feedbackIcon(severity: GeneratorStatus['severity']) {
+  if (severity === 'success') return <Check />;
+  if (severity === 'error') return <ErrorOutline />;
+  return <AutoAwesome />;
+}
+
+function feedbackClassName(severity: GeneratorStatus['severity']) {
+  const base = '!text-white !font-semibold transition-all [&_.MuiAlert-icon]:!text-white';
+  if (severity === 'success') {
+    return `${base} !bg-black !border !border-[#e2001a] cursor-pointer hover:!bg-gray-900 hover:!-translate-y-0.5 hover:!shadow-md [&_.MuiAlert-icon]:!text-[#e2001a]`;
+  }
+  if (severity === 'error') {
+    return `${base} !bg-[#b80015] !border !border-[#a50012]`;
+  }
+  return `${base} !bg-gray-900 !border !border-gray-600`;
 }
 
 export function GenerationFeedback({ status, onClose, onClick }: GenerationFeedbackProps) {
@@ -20,13 +37,9 @@ export function GenerationFeedback({ status, onClose, onClick }: GenerationFeedb
         onClose={onClose}
         severity={status.severity}
         variant="filled"
-        icon={status.severity === 'success' ? <Check /> : <AutoAwesome />}
+        icon={feedbackIcon(status.severity)}
         onClick={onClick}
-        className={`!text-white !font-semibold transition-all [&_.MuiAlert-icon]:!text-[#e2001a] ${
-          status.severity === 'success'
-            ? '!bg-black !border !border-[#e2001a] cursor-pointer hover:!bg-gray-900 hover:!-translate-y-0.5 hover:!shadow-md'
-            : '!bg-gray-900 !border !border-gray-600'
-        }`}
+        className={feedbackClassName(status.severity)}
       >
         {status.message}
       </Alert>

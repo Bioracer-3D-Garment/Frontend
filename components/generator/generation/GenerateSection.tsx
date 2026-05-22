@@ -3,25 +3,31 @@ import { AutoAwesome } from '@mui/icons-material';
 
 interface GenerateSectionProps {
   clothingCount: number;
-  selectedModels: number;
+  selectedGender: string;
   selectedProjectName: string;
   generating: boolean;
+  progress: { completed: number; total: number };
   canGenerate: boolean;
   onGenerate: () => void;
 }
 
 export function GenerateSection({
   clothingCount,
-  selectedModels,
+  selectedGender,
   selectedProjectName,
   generating,
+  progress,
   canGenerate,
   onGenerate,
 }: GenerateSectionProps) {
+  const progressValue = progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
+
   return (
     <section className="bg-black text-white rounded relative overflow-hidden">
       {generating && (
         <LinearProgress
+          variant={progress.total > 0 ? 'determinate' : 'indeterminate'}
+          value={progress.total > 0 ? progressValue : undefined}
           className="absolute inset-x-0 top-0 !bg-[rgba(255,255,255,0.1)] [&_.MuiLinearProgress-bar]:!bg-[#e2001a]"
         />
       )}
@@ -34,10 +40,16 @@ export function GenerateSection({
             </Typography>
           </div>
           <Typography variant="h4" className="font-extrabold mb-1">
-            {canGenerate ? 'Ready when you are.' : selectedProjectName === '' ? 'Select a project first.' : 'Add clothing and pick at least one model.'}
+            {canGenerate
+              ? 'Ready when you are.'
+              : selectedProjectName === ''
+              ? 'Select a project first.'
+              : 'Add clothing and select a model gender.'}
           </Typography>
           <Typography variant="body2" className="text-gray-400">
-            {`${clothingCount} clothing item${clothingCount !== 1 ? 's' : ''} × ${selectedModels} model${selectedModels !== 1 ? 's' : ''} · saves to "${selectedProjectName || 'select a project'}" · optimized lighting, poses & camera angles applied automatically.`}
+            {generating && progress.total > 0
+              ? `${progress.completed} / ${progress.total} generated…`
+              : `${clothingCount} clothing item${clothingCount !== 1 ? 's' : ''} · ${selectedGender || 'no model selected'} · saves to "${selectedProjectName || 'select a project'}" · optimized lighting and camera angles applied automatically.`}
           </Typography>
         </div>
         <Button

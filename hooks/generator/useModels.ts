@@ -8,17 +8,14 @@ const initialModels: Model[] = [patrickModel, gaelleModel];
 export function useModels() {
   const [models, setModels] = useState<Model[]>(initialModels);
 
-  const toggleModelSelection = (id: number) => {
-    setModels((currentModels) =>
-      currentModels.map((model) => (model.id === id ? { ...model, selected: !model.selected } : model))
+  const selectModel = (id: number) => {
+    setModels((current) =>
+      current.map((model) => ({ ...model, selected: model.id === id }))
     );
   };
 
-  const selectedModels = models.filter((model) => model.selected).length;
+  const selectedModel = models.find((m) => m.selected);
+  const selectedGender = selectedModel?.gender ?? null;
 
-  return {
-    models,
-    selectedModels,
-    toggleModelSelection,
-  };
+  return { models, selectedModel, selectedGender, selectModel };
 }

@@ -9,9 +9,10 @@ interface ClothingUploadSectionProps {
   subtitle: string;
   onFileUpload: (event: ChangeEvent<HTMLInputElement>) => void;
   onRemove: (id: number) => void;
+  onToggleCategory: (id: number) => void;
 }
 
-export function ClothingUploadSection({ clothing, subtitle, onFileUpload, onRemove }: ClothingUploadSectionProps) {
+export function ClothingUploadSection({ clothing, subtitle, onFileUpload, onRemove, onToggleCategory }: ClothingUploadSectionProps) {
   return (
     <section>
       <SectionHeader step="02" title="Upload Clothing" subtitle={subtitle} />
@@ -48,11 +49,24 @@ export function ClothingUploadSection({ clothing, subtitle, onFileUpload, onRemo
                   <span className="text-gray-400 font-bold tracking-widest">3D</span>
                 )}
               </div>
-              <div className="px-3 py-2 border-t border-gray-100">
-                <Typography variant="caption" className="font-semibold text-black block truncate">
+
+              <div className="px-3 py-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                <Typography variant="caption" className="font-semibold text-black truncate flex-1">
                   {item.name}
                 </Typography>
+                <button
+                  type="button"
+                  onClick={() => onToggleCategory(item.id)}
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase transition-colors ${
+                    item.category === 'top'
+                      ? 'bg-[#e2001a] text-white'
+                      : 'bg-black text-white'
+                  }`}
+                >
+                  {item.category === 'top' ? 'Top' : 'Bottom'}
+                </button>
               </div>
+
               <button
                 onClick={() => onRemove(item.id)}
                 className="absolute top-2 right-2 bg-white border border-gray-200 rounded-full p-1 opacity-0 group-hover:opacity-100 transition hover:border-[#e2001a] hover:text-[#e2001a]"
@@ -61,6 +75,7 @@ export function ClothingUploadSection({ clothing, subtitle, onFileUpload, onRemo
               </button>
             </div>
           ))}
+
           <label htmlFor="upload-clothing">
             <div className="aspect-square border-2 border-dashed border-gray-300 hover:border-[#e2001a] hover:bg-red-50/30 transition-colors cursor-pointer flex flex-col items-center justify-center rounded">
               <CloudUpload className="text-gray-400 mb-1 text-[32px]" />
