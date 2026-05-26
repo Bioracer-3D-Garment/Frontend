@@ -54,11 +54,7 @@ class ProjectService {
       headers: this.getAuthHeaders(),
     });
 
-    if (response.status === 204) return;
-    if (response.status === 401) throw Object.assign(new Error("Unauthorized"), { status: 401 });
-    if (response.status === 403) throw Object.assign(new Error("Forbidden"), { status: 403 });
-    if (response.status === 404) throw Object.assign(new Error("Not found"), { status: 404 });
-    throw new Error("Failed to delete project");
+    if (!response.ok && response.status !== 204) throw new Error("Failed to delete project");
   }
 
   public async updateProjectDetails(

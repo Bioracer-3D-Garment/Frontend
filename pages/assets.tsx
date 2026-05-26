@@ -60,17 +60,8 @@ export default function AssetsPage() {
 		try {
 			await projectService.deleteProject(id);
 			setProjects((prev) => prev.filter((p) => p.id !== id));
-		} catch (err: unknown) {
-			const status = (err as { status?: number }).status;
-			if (status === 401) {
-				redirectToLogin();
-			} else if (status === 403) {
-				setProjectError('Je hebt geen toestemming om dit project te verwijderen.');
-			} else if (status === 404) {
-				setProjectError('Project niet gevonden.');
-			} else {
-				setProjectError('Verwijderen mislukt.');
-			}
+		} catch {
+			setProjectError('Verwijderen mislukt.');
 		}
 	};
 
