@@ -6,9 +6,10 @@ interface NewProjectDialogProps {
   onNameChange: (value: string) => void;
   onCreate: () => void;
   onClose: () => void;
+  error?: string;
 }
 
-export function NewProjectDialog({ open, name, onNameChange, onCreate, onClose }: NewProjectDialogProps) {
+export function NewProjectDialog({ open, name, onNameChange, onCreate, onClose, error }: NewProjectDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle className="font-bold">Create New Project</DialogTitle>
@@ -25,6 +26,9 @@ export function NewProjectDialog({ open, name, onNameChange, onCreate, onClose }
           onKeyDown={(event) => event.key === 'Enter' && onCreate()}
           className="mt-2 [&_.MuiInputLabel-root]:!text-[#e2001a] [&_.MuiInputLabel-root.Mui-focused]:!text-[#e2001a] [&_.MuiOutlinedInput-root_.MuiOutlinedInput-notchedOutline]:!border-[#e2001a] [&_.MuiOutlinedInput-root:hover_.MuiOutlinedInput-notchedOutline]:!border-[#e2001a] [&_.MuiOutlinedInput-root.Mui-focused_.MuiOutlinedInput-notchedOutline]:!border-[#e2001a]"
         />
+        {error && (
+          <p className="text-red-600 text-sm mt-2">{error}</p>
+        )}
       </DialogContent>
       <DialogActions className="px-6 pb-6">
         <Button onClick={onClose} className="!text-black">
