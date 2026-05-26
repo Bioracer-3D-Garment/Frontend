@@ -1,5 +1,11 @@
 import { getJwtToken } from '@/service/auth/auth_service';
-import type { BatchStatus } from '@/types/types';
+import type { BatchStatus, GarmentError } from '@/types/types';
+
+interface BatchSubmitParams {
+  garmentZip: File;
+  gender: string;
+  folderId: number;
+}
 
 class BatchService {
   private getAuthHeaders(): Record<string, string> {
@@ -8,13 +14,30 @@ class BatchService {
     return { Authorization: `Bearer ${token}` };
   }
 
-  async startBatch(formData: FormData): Promise<{ jobId: string }> {
+  async startBatch({ garmentZip, gender, folderId }: BatchSubmitParams): Promise<{ jobId: string }> {
+    const formData = new FormData();
+    formData.append('garmentZip', garmentZip);
+    formData.append('gender', gender);
+    formData.append('folderId', String(folderId));
+
     const url = `${process.env.NEXT_PUBLIC_API_URL}/batches`;
     const response = await fetch(url, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: formData,
     });
+
+    if (response.status === 400) {
+      const body = await response.json().catch(() => ({}));
+      if (Array.isArray(body.garmentErrors) && body.garmentErrors.length > 0) {
+        const issues = (body.garmentErrors as GarmentError[])
+          .map((e) => `${e.garment}: missing ${e.missing.join(', ')}`)
+          .join('; ');
+        throw new Error(`ZIP validation failed — ${issues}`);
+      }
+      throw new Error(body.message ?? 'Invalid request');
+    }
+
     if (!response.ok) throw new Error('Failed to start batch');
     return response.json();
   }
@@ -35,6 +58,7 @@ class BatchService {
       method: 'GET',
       headers: this.getAuthHeaders(),
     });
+    if (response.status === 409) throw new Error('Job is not finished yet — please wait until generation completes.');
     if (!response.ok) throw new Error('Failed to download batch results');
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
