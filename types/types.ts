@@ -49,6 +49,13 @@ export interface Project {
   date: string;
   itemCount: number;
   coverImage: string;
+  galleryImages: string[];
+}
+
+export interface ProjectSavePayload {
+  name: string;
+  coverImage: string;
+  galleryImages: string[];
 }
 
 export interface GeneratorStatus {

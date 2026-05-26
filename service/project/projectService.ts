@@ -1,7 +1,18 @@
-import type { Project } from "@/types/types";
+import type { Project, ProjectSavePayload } from "@/types/types";
 import { getJwtToken } from "@/service/auth/auth_service";
 
 class ProjectService {
+  private normalizeProject(project: Partial<Project>): Project {
+    return {
+      id: project.id ?? 0,
+      name: project.name ?? "",
+      date: project.date ?? "",
+      itemCount: project.itemCount ?? 0,
+      coverImage: project.coverImage ?? "",
+      galleryImages: project.galleryImages ?? [],
+    };
+  }
+
   private getAuthHeaders() {
     const token = getJwtToken();
 
@@ -28,15 +39,15 @@ class ProjectService {
     }
 
     const data = await response.json();
-    return data as Project[];
+    return (data as Partial<Project>[]).map((project) => this.normalizeProject(project));
   }
 
-  public async createProject(name: string): Promise<Project> {
+  public async createProject(payload: ProjectSavePayload): Promise<Project> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/projects`;
     const response = await fetch(url, {
       method: "POST",
       headers: this.getAuthHeaders(),
-      body: JSON.stringify({ name }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -44,12 +55,12 @@ class ProjectService {
     }
 
     const data = await response.json();
-    return data as Project;
+    return this.normalizeProject(data as Partial<Project>);
   }
 
   public async updateProjectDetails(
     projectId: number,
-    project: Project,
+    project: ProjectSavePayload,
   ): Promise<Project> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`;
     const response = await fetch(url, {
@@ -66,7 +77,7 @@ class ProjectService {
 
     const data = await response.json();
 
-    return data as Project;
+    return this.normalizeProject(data as Partial<Project>);
   }
 }
 
