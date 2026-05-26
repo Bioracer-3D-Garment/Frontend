@@ -15,12 +15,34 @@ export interface PoseOption {
   selected: boolean;
 }
 
+export interface GeneratedAsset {
+  id: number;
+  projectId: number;
+  jobId: string;
+  productId: string;
+  poseId: string;
+  category: 'upper_body' | 'lower_body';
+  secureUrl: string;
+  thumbnailUrl: string;
+  createdAt: string;
+}
+
+export interface ProjectAssetsPage {
+  projectId: number;
+  totalCount: number;
+  page: number;
+  size: number;
+  assets: GeneratedAsset[];
+}
+
 export interface BatchStatus {
   jobId: string;
-  status: 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED';
+  status: 'PENDING' | 'RUNNING' | 'DONE' | 'PARTIAL' | 'FAILED';
   completed: number;
   total: number;
+  uploadedCount: number;
   failedItems: { productId: string; poseId: string; reason: string }[];
+  assets: GeneratedAsset[] | null;
 }
 
 export interface Model {
@@ -40,21 +62,28 @@ export interface Asset {
   clothing: string;
   model: string;
   thumbnail: string;
+  secureUrl: string;
   projectId: number;
+}
+
+export interface ProjectUser {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
 }
 
 export interface Project {
   id: number;
   name: string;
-  date: string;
-  itemCount: number;
   coverImage: string;
+  user?: ProjectUser;
 }
 
 export interface GeneratorStatus {
   open: boolean;
   message: string;
-  severity: 'success' | 'info' | 'error';
+  severity: 'success' | 'info' | 'warning' | 'error';
 }
 
 export interface EditProjectDialogState {
@@ -73,6 +102,19 @@ export interface StatusMessage {
 }
 
 export type UserLoginResult = { ok: true; message?: string } | { ok: false; message: string };
+
+export interface GarmentError {
+  garment: string;
+  found:   string[];
+  missing: string[];
+}
+
+export interface ZipValidationError {
+  status:        number;
+  error:         string;
+  message:       string;
+  garmentErrors: GarmentError[];
+}
 
 export interface UserLoginCredentials {
   email: string;
