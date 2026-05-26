@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { Edit as EditIcon } from "@mui/icons-material";
+import { Edit as EditIcon, DeleteOutline as DeleteIcon } from "@mui/icons-material";
 import type { Project } from "@/types/types";
 import { CldImage } from "next-cloudinary";
 
@@ -7,12 +7,14 @@ interface ProjectGridProps {
   projects: Project[];
   onEditProject: (projectId: number) => void;
   onSelectProject: (projectId: number) => void;
+  onDeleteProject: (projectId: number) => void;
 }
 
 export function ProjectGrid({
   projects,
   onSelectProject,
   onEditProject,
+  onDeleteProject,
 }: ProjectGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -38,15 +40,26 @@ export function ProjectGrid({
               alt="image"
             />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditProject(project.id);
-              }}
-              className="absolute top-2 right-2 p-2 opacity-0 group-hover:opacity-100 transition-all bg-white group-hover:rounded-full hover:bg-[#e2001a] text-gray-700 hover:text-white"
-            >
-              <EditIcon className="w-4 h-4 transition-colors" />
-            </button>
+            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditProject(project.id);
+                }}
+                className="p-2 bg-white rounded-full hover:bg-[#e2001a] text-gray-700 hover:text-white transition-colors"
+              >
+                <EditIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteProject(project.id);
+                }}
+                className="p-2 bg-white rounded-full hover:bg-red-700 text-gray-400 hover:text-white transition-colors"
+              >
+                <DeleteIcon className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="p-4">
             <Typography

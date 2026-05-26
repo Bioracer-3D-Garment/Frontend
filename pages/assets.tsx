@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Typography, Button } from '@mui/material';
+import { Typography, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import { Download, ArrowBack } from '@mui/icons-material';
 import { Navbar } from '@/components/Navbar';
 import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
@@ -23,6 +23,7 @@ export default function AssetsPage() {
     
 	const [loadingProjects, setLoadingProjects] = useState(true);
 	const [projectError, setProjectError] = useState('');
+	const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
 	const { assets, filter, setFilter, filteredAssets, filters } = useAssets(selectedProjectId);
 
 	useEffect(() => {
@@ -45,6 +46,22 @@ export default function AssetsPage() {
 		const projectToEdit = projects.find((p) => p.id === projectId);
 		if (projectToEdit) {
 			openEditDialog(projectToEdit);
+		}
+	};
+
+	const handleDeleteProject = (projectId: number) => {
+		setPendingDeleteId(projectId);
+	};
+
+	const confirmDeleteProject = async () => {
+		if (pendingDeleteId === null) return;
+		const id = pendingDeleteId;
+		setPendingDeleteId(null);
+		try {
+			await projectService.deleteProject(id);
+			setProjects((prev) => prev.filter((p) => p.id !== id));
+		} catch {
+			setProjectError('Verwijderen mislukt.');
 		}
 	};
 
@@ -116,11 +133,23 @@ export default function AssetsPage() {
 				)}
 
 				{!selectedProject && !loadingProjects && (
-				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} />
+				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} onDeleteProject={handleDeleteProject} />
 			)}
 
 				{selectedProject && <AssetGrid assets={filteredAssets} />}
 			</div>
+		<Dialog open={pendingDeleteId !== null} onClose={() => setPendingDeleteId(null)}>
+				<DialogTitle>Project verwijderen</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						Ben je zeker dat je dit project wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setPendingDeleteId(null)}>Annuleren</Button>
+					<Button onClick={confirmDeleteProject} color="error" variant="contained">Verwijderen</Button>
+				</DialogActions>
+			</Dialog>
 		<EditProjectDialog
 			open={editDialog.open}
 			projectName={editDialog.projectName}
