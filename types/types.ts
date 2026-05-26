@@ -58,6 +58,14 @@ export interface ProjectSavePayload {
   galleryImages: string[];
 }
 
+export interface CreateAssetPayload {
+  name: string;
+  type: 'image';
+  thumbnail: string;
+  clothing: string;
+  model: string;
+}
+
 export interface GeneratorStatus {
   open: boolean;
   message: string;

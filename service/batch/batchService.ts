@@ -1,3 +1,4 @@
+import JSZip from 'jszip';
 import { getJwtToken } from '@/service/auth/auth_service';
 import type { BatchStatus } from '@/types/types';
 
@@ -29,20 +30,28 @@ class BatchService {
     return response.json();
   }
 
-  async downloadBatch(jobId: string): Promise<void> {
+  async getBatchImages(jobId: string): Promise<{ name: string; file: File }[]> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/batches/${jobId}/download`;
     const response = await fetch(url, {
       method: 'GET',
       headers: this.getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to download batch results');
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = objectUrl;
-    a.download = `batch-${jobId}.zip`;
-    a.click();
-    URL.revokeObjectURL(objectUrl);
+
+    const zipBlob = await response.blob();
+    const zip = await JSZip.loadAsync(zipBlob);
+
+    const entries = Object.entries(zip.files).filter(([, entry]) => !entry.dir);
+
+    const files = await Promise.all(
+      entries.map(async ([path, entry]) => {
+        const blob = await entry.async('blob');
+        const name = path.split('/').pop() ?? path;
+        return { name, file: new File([blob], name, { type: blob.type || 'image/jpeg' }) };
+      })
+    );
+
+    return files;
   }
 }
 

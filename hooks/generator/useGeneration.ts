@@ -2,8 +2,11 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import type { ClothingItem, GeneratorStatus } from '@/types/types';
 import BatchService from '@/service/batch/batchService';
+import AssetService from '@/service/asset/assetService';
+import { uploadToCloudinary } from '@/utils/cloudinary';
 
 const batchService = new BatchService();
+const assetService = new AssetService();
 const POLL_INTERVAL_MS = 3000;
 
 interface UseGenerationParams {
@@ -27,6 +30,26 @@ export function useGeneration({ clothing, selectedGender, selectedProjectName, s
 			clearInterval(pollRef.current);
 			pollRef.current = null;
 		}
+	};
+
+	const saveGeneratedAssets = async (jobId: string) => {
+		const images = await batchService.getBatchImages(jobId);
+		const clothingLabel = clothing.map((c) => c.name).join(', ');
+
+		await Promise.all(
+			images.map(async ({ name, file }) => {
+				const cloudinaryUrl = await uploadToCloudinary(file);
+				await assetService.createProjectAsset(selectedProjectId!, {
+					name,
+					type: 'image',
+					thumbnail: cloudinaryUrl,
+					clothing: clothingLabel,
+					model: selectedGender!,
+				});
+			})
+		);
+
+		return images.length;
 	};
 
 	const handleGenerate = async () => {
@@ -62,13 +85,25 @@ export function useGeneration({ clothing, selectedGender, selectedProjectName, s
 
 				if (batchStatus.status === 'DONE') {
 					stopPolling();
-					setGenerating(false);
-					await batchService.downloadBatch(jobId);
-					setStatus({
-						open: true,
-						message: `${batchStatus.completed} asset${batchStatus.completed !== 1 ? 's' : ''} generated in "${selectedProjectName}". Click to view.`,
-						severity: 'success',
-					});
+					setStatus({ open: true, message: 'Saving results to your library…', severity: 'info' });
+
+					try {
+						const savedCount = await saveGeneratedAssets(jobId);
+						setGenerating(false);
+						setStatus({
+							open: true,
+							message: `${savedCount} asset${savedCount !== 1 ? 's' : ''} generated in "${selectedProjectName}". Click to view.`,
+							severity: 'success',
+						});
+					} catch {
+						setGenerating(false);
+						setStatus({
+							open: true,
+							message: 'Generation succeeded but failed to save assets to your library. Please try again.',
+							severity: 'error',
+						});
+					}
+
 					setProgress({ completed: 0, total: 0 });
 				} else if (batchStatus.status === 'FAILED') {
 					stopPolling();
@@ -91,8 +126,8 @@ export function useGeneration({ clothing, selectedGender, selectedProjectName, s
 	};
 
 	const handleSnackbarClick = () => {
-		if (status.severity === 'success') {
-			router.push('/assets');
+		if (status.severity === 'success' && selectedProjectId !== null) {
+			router.push(`/assets?project=${selectedProjectId}`);
 		}
 	};
 

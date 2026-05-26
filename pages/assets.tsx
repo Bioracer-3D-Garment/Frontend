@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { Typography, Button } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { Navbar } from '@/components/Navbar';
@@ -12,6 +13,7 @@ import type { Project } from '@/types/types';
 import ProjectService from '@/service/project/projectService';
 
 export default function AssetsPage() {
+	const router = useRouter();
 	const { redirectToLogin } = useAuthRedirects();
 	const [projects, setProjects] = useState<Project[]>([]);
 	const projectService = new ProjectService();
@@ -20,10 +22,10 @@ export default function AssetsPage() {
 		projectService,
 		(updated) => setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
 	);
-    
+
 	const [loadingProjects, setLoadingProjects] = useState(true);
 	const [projectError, setProjectError] = useState('');
-	const { assets, filter, setFilter, filteredAssets, filters } = useAssets(selectedProjectId);
+	const { assets, filter, setFilter, filteredAssets, filters, loadingAssets, assetError } = useAssets(selectedProjectId);
 
 	useEffect(() => {
 		projectService
@@ -39,7 +41,17 @@ export default function AssetsPage() {
 			});
 	}, []);
 
+	// Auto-select project from ?project= query param (set by generator on success)
+	useEffect(() => {
+		const query = router.query.project;
+		if (typeof query === 'string') {
+			const id = parseInt(query, 10);
+			if (!isNaN(id)) setSelectedProjectId(id);
+		}
+	}, [router.query.project]);
+
 	const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
+	const totalAssets = projects.reduce((sum, p) => sum + p.itemCount, 0);
 
 	const handleEditProject = (projectId: number) => {
 		const projectToEdit = projects.find((p) => p.id === projectId);
@@ -67,7 +79,7 @@ export default function AssetsPage() {
 						<Typography variant="body1" className="text-gray-500 mt-1">
 							{selectedProject
 								? `${filteredAssets.length} asset${filteredAssets.length !== 1 ? 's' : ''} in this project.`
-								: `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${assets.length} total assets.`}
+								: `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${totalAssets} total asset${totalAssets !== 1 ? 's' : ''}.`}
 						</Typography>
 						{projectError && (
 							<Typography variant="body2" className="text-red-600 mt-2">
@@ -115,12 +127,31 @@ export default function AssetsPage() {
 				)}
 
 				{!selectedProject && !loadingProjects && (
-				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} />
-			)}
+					<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} />
+				)}
 
-				{selectedProject && <AssetGrid assets={filteredAssets} />}
+				{selectedProject && assetError && (
+					<Typography variant="body2" className="text-red-600 mb-4">
+						{assetError}
+					</Typography>
+				)}
+
+				{selectedProject && loadingAssets && (
+					<Typography variant="body2" className="text-gray-500">
+						Loading assets…
+					</Typography>
+				)}
+
+				{selectedProject && !loadingAssets && !assetError && assets.length === 0 && (
+					<Typography variant="body2" className="text-gray-500">
+						No assets yet. Generate some from the generator page.
+					</Typography>
+				)}
+
+				{selectedProject && !loadingAssets && <AssetGrid assets={filteredAssets} />}
 			</div>
-		<EditProjectDialog {...editDialog} />
+
+			<EditProjectDialog {...editDialog} />
 		</div>
 	);
 }
