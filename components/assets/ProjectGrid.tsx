@@ -3,6 +3,15 @@ import { Edit as EditIcon } from "@mui/icons-material";
 import type { Project } from "@/types/types";
 import { CldImage } from "next-cloudinary";
 
+function isRenderableUrl(source: string) {
+  return (
+    source.startsWith("http://") ||
+    source.startsWith("https://") ||
+    source.startsWith("blob:") ||
+    source.startsWith("data:")
+  );
+}
+
 interface ProjectGridProps {
   projects: Project[];
   onEditProject: (projectId: number) => void;
@@ -31,12 +40,24 @@ export function ProjectGrid({
           className="group text-left bg-white border border-gray-200 transition-all rounded overflow-hidden cursor-pointer"
         >
           <div className="relative aspect-square bg-gray-100 overflow-hidden w-full">
-            <CldImage
-              width="300"
-              height="300"
-              src={project.coverImage}
-              alt="image"
-            />
+            {project.coverImage && isRenderableUrl(project.coverImage) ? (
+              <img
+                src={project.coverImage}
+                alt={project.name}
+                className="h-full w-full object-cover"
+              />
+            ) : project.coverImage ? (
+              <CldImage
+                width="300"
+                height="300"
+                src={project.coverImage}
+                alt={project.name}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs font-medium uppercase tracking-widest text-gray-400">
+                No cover image
+              </div>
+            )}
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
             <button
               onClick={(e) => {

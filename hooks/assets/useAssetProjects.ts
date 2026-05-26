@@ -4,6 +4,7 @@ import type { EditProjectDialogState } from "@/types/types";
 import { revokePreviewIfBlob } from "@/utils/preview";
 import ProjectService from "@/service/project/projectService";
 import { uploadToCloudinary } from "@/utils/cloudinary";
+import { buildProjectPayload } from "@/utils/projectPayload";
 
 export function useAssetProjects(
   injectedProjectService: ProjectService = new ProjectService(),
@@ -26,8 +27,10 @@ export function useAssetProjects(
 
   // IMPORTANT: store selected FILE, not upload result
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedGalleryFiles, setSelectedGalleryFiles] = useState<File[]>([]);
 
   const [isUploading, setIsUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [projectService] = useState(() => injectedProjectService);
 
@@ -45,13 +48,19 @@ export function useAssetProjects(
     setSelectedFile(file);
   };
 
+  const handleGalleryImagesChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSelectedGalleryFiles(Array.from(event.target.files ?? []));
+  };
+
   const openEditDialog = (project: Project) => {
+    setErrorMessage("");
     setEditDialog({ open: true, projectId: project.id });
     setEditProject(project);
     setEditProjectName(project.name);
 
     setEditImagePreview(project.coverImage);
     setSelectedFile(null);
+    setSelectedGalleryFiles([]);
   };
 
   const closeEditDialog = () => {
@@ -62,27 +71,38 @@ export function useAssetProjects(
     setEditProjectName("");
     setEditImagePreview("");
     setSelectedFile(null);
+    setSelectedGalleryFiles([]);
+    setErrorMessage("");
   };
 
   const onSave = async () => {
     if (!editProject) return;
 
     setIsUploading(true);
+    setErrorMessage("");
 
     try {
       let coverImage = editProject.coverImage;
+      let galleryImages = editProject.galleryImages ?? [];
 
       // ONLY upload if user selected a new file
       if (selectedFile) {
-        const publicId = await uploadToCloudinary(selectedFile);
-        coverImage = publicId;
+        coverImage = await uploadToCloudinary(selectedFile);
       }
 
-      const updatedProject: Project = {
-        ...editProject,
-        name: editProjectName,
+      if (selectedGalleryFiles.length > 0) {
+        const uploadedGalleryImages = await Promise.all(
+          selectedGalleryFiles.map((file) => uploadToCloudinary(file)),
+        );
+
+        galleryImages = [...galleryImages, ...uploadedGalleryImages];
+      }
+
+      const updatedProject = buildProjectPayload(
+        editProjectName,
         coverImage,
-      };
+        galleryImages,
+      );
 
       const saved = await projectService.updateProjectDetails(
         editDialog.projectId!,
@@ -90,11 +110,12 @@ export function useAssetProjects(
       );
 
       if (onProjectUpdated) onProjectUpdated(saved);
+      closeEditDialog();
     } catch (err) {
       console.error("Failed to update project:", err);
+      setErrorMessage("Failed to upload images or save the project. Check Cloudinary and try again.");
     } finally {
       setIsUploading(false);
-      closeEditDialog();
     }
   };
 
@@ -110,9 +131,12 @@ export function useAssetProjects(
       projectImagePreview: editImagePreview,
       onProjectNameChange: setEditProjectName,
       onImageFileChange: handleImageFileChange,
+      onGalleryImagesChange: handleGalleryImagesChange,
       onClose: closeEditDialog,
       onSave,
       isUploading,
+      galleryImageCount: selectedGalleryFiles.length,
+      errorMessage,
     },
   };
 }

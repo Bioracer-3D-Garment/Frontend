@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Typography, Button } from '@mui/material';
-import { Download, ArrowBack } from '@mui/icons-material';
+import { ArrowBack } from '@mui/icons-material';
 import { Navbar } from '@/components/Navbar';
 import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
 import { ProjectGrid } from '@/components/assets/ProjectGrid';
@@ -78,7 +78,6 @@ export default function AssetsPage() {
 					{selectedProject && (
 						<Button
 							variant="contained"
-							startIcon={<Download />}
 							className="bg-[#e2001a] text-white px-6 py-3 font-bold tracking-widest transition-all hover:bg-[#b80015] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/40"
 						>
 							DOWNLOAD ALL
@@ -121,14 +120,7 @@ export default function AssetsPage() {
 
 				{selectedProject && <AssetGrid assets={filteredAssets} />}
 			</div>
-		<EditProjectDialog
-			open={editDialog.open}
-			projectName={editDialog.projectName}
-			projectImagePreview={editDialog.projectImagePreview}
-			onProjectNameChange={editDialog.onProjectNameChange}
-			onImageFileChange={editDialog.onImageFileChange}
-			onClose={editDialog.onClose}
-			onSave={editDialog.onSave}
-		/>		</div>
+		<EditProjectDialog {...editDialog} />
+		</div>
 	);
 }
