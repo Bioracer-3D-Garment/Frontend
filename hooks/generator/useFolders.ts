@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Project } from '@/types/types';
 import { createProject } from '@/utils/folder';
 import ProjectService from '@/service/project/projectService';
@@ -14,6 +14,28 @@ export function useProjects() {
 	);
 
 	const projectService = new ProjectService();
+
+	useEffect(() => {
+		let isActive = true;
+
+		const loadProjects = async () => {
+			try {
+				const projectList = await projectService.getAllProjects();
+
+				if (isActive) {
+					setProjects(projectList);
+				}
+			} catch (err) {
+				console.error('Failed to load projects for generator', err);
+			}
+		};
+
+		void loadProjects();
+
+		return () => {
+			isActive = false;
+		};
+	}, []);
 
 	const handleCreateProject = async () => {
 		const trimmedName = newProjectName.trim();

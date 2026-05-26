@@ -16,11 +16,8 @@ export function LoginFormPanel(props: LoginFormPanelProps) {
         <Typography variant="overline" className="text-[#e2001a] tracking-[0.2em] font-bold">
           WELCOME BACK
         </Typography>
-        <Typography variant="h3" className="font-extrabold mt-1 mb-1 text-black leading-tight">
+        <Typography variant="h4" className="font-extrabold mt-1 mb-1 text-black leading-tight">
           Sign in to your studio.
-        </Typography>
-        <Typography variant="body1" className="text-gray-500 mb-8">
-          Generate 3D product imagery & video for the Bioracer webshop.
         </Typography>
 
         <UserLoginForm {...props} />
@@ -30,7 +27,7 @@ export function LoginFormPanel(props: LoginFormPanelProps) {
         </Typography>
       </div>
 
-      <Typography variant="caption" className="text-gray-400">
+      <Typography variant="caption" className="text-gray-400 text-center">
         © {new Date().getFullYear()} Bioracer Studio
       </Typography>
     </div>
