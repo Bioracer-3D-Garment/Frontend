@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Project } from '@/types/types';
 import { createProject } from '@/utils/folder';
 import ProjectService from '@/service/project/projectService';
@@ -13,10 +13,32 @@ export function useProjects() {
 		(project) => project.id === selectedProjectId,
 	);
 
-	const projectService = new ProjectService();
+	useEffect(() => {
+		let isActive = true;
+		const projectService = new ProjectService();
+
+		const loadProjects = async () => {
+			try {
+				const existingProjects = await projectService.getAllProjects();
+
+				if (isActive) {
+					setProjects(existingProjects);
+				}
+			} catch (err) {
+				console.error('Failed to load projects', err);
+			}
+		};
+
+		void loadProjects();
+
+		return () => {
+			isActive = false;
+		};
+	}, []);
 
 	const handleCreateProject = async () => {
 		const trimmedName = newProjectName.trim();
+		const projectService = new ProjectService();
 
 		if (!trimmedName) {
 			return;
