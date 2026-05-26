@@ -1,26 +1,27 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
-import type { ClothingItem, GeneratorStatus } from '@/types/types';
+import type { GeneratorStatus, GeneratedAsset } from '@/types/types';
 import BatchService from '@/service/batch/batchService';
 
 const batchService = new BatchService();
 const POLL_INTERVAL_MS = 3000;
 
 interface UseGenerationParams {
-	clothing: ClothingItem[];
+	zipFile: File | null;
 	selectedGender: string | null;
 	selectedProjectName: string;
 	selectedProjectId: number | null;
 }
 
-export function useGeneration({ clothing, selectedGender, selectedProjectName, selectedProjectId }: UseGenerationParams) {
+export function useGeneration({ zipFile, selectedGender, selectedProjectName, selectedProjectId }: UseGenerationParams) {
 	const router = useRouter();
 	const [generating, setGenerating] = useState(false);
 	const [progress, setProgress] = useState({ completed: 0, total: 0 });
 	const [status, setStatus] = useState<GeneratorStatus>({ open: false, message: '', severity: 'info' });
+	const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[] | null>(null);
 	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-	const canGenerate = clothing.length > 0 && selectedGender !== null && selectedProjectId !== null;
+	const canGenerate = zipFile !== null && selectedGender !== null && selectedProjectId !== null;
 
 	const stopPolling = () => {
 		if (pollRef.current) {
@@ -31,29 +32,29 @@ export function useGeneration({ clothing, selectedGender, selectedProjectName, s
 
 	const handleGenerate = async () => {
 		setGenerating(true);
+		setGeneratedAssets(null);
 		setProgress({ completed: 0, total: 0 });
 		setStatus({ open: true, message: 'Starting batch…', severity: 'info' });
 
-		const formData = new FormData();
-		clothing.forEach((item) => {
-			formData.append('garmentFiles', item.file);
-			formData.append('garmentNames', item.name);
-			formData.append('garmentCategories', item.category);
-		});
-		formData.append('gender', selectedGender!);
-		formData.append('folderId', String(selectedProjectId));
-
 		let jobId: string;
 		try {
-			const result = await batchService.startBatch(formData);
+			const result = await batchService.startBatch({
+				garmentZip: zipFile!,
+				gender: selectedGender!,
+				folderId: selectedProjectId!,
+			});
 			jobId = result.jobId;
-		} catch {
+		} catch (err) {
 			setGenerating(false);
-			setStatus({ open: true, message: 'Failed to start batch. Please try again.', severity: 'error' });
+			setStatus({
+				open: true,
+				message: err instanceof Error ? err.message : 'Failed to start batch. Please try again.',
+				severity: 'error',
+			});
 			return;
 		}
 
-		setStatus({ open: true, message: `Generating ${clothing.length} item${clothing.length !== 1 ? 's' : ''} with ${selectedGender} model…`, severity: 'info' });
+		setStatus({ open: true, message: `Generating "${zipFile!.name}" with ${selectedGender} model…`, severity: 'info' });
 
 		pollRef.current = setInterval(async () => {
 			try {
@@ -63,11 +64,22 @@ export function useGeneration({ clothing, selectedGender, selectedProjectName, s
 				if (batchStatus.status === 'DONE') {
 					stopPolling();
 					setGenerating(false);
-					await batchService.downloadBatch(jobId);
+					setGeneratedAssets(batchStatus.assets);
 					setStatus({
 						open: true,
-						message: `${batchStatus.completed} asset${batchStatus.completed !== 1 ? 's' : ''} generated in "${selectedProjectName}". Click to view.`,
+						message: `${batchStatus.uploadedCount} asset${batchStatus.uploadedCount !== 1 ? 's' : ''} generated in "${selectedProjectName}". Click to view.`,
 						severity: 'success',
+					});
+					setProgress({ completed: 0, total: 0 });
+				} else if (batchStatus.status === 'PARTIAL') {
+					stopPolling();
+					setGenerating(false);
+					setGeneratedAssets(batchStatus.assets);
+					const failCount = batchStatus.failedItems.length;
+					setStatus({
+						open: true,
+						message: `${batchStatus.uploadedCount} asset${batchStatus.uploadedCount !== 1 ? 's' : ''} generated with ${failCount} failure${failCount !== 1 ? 's' : ''}. Click to view.`,
+						severity: 'warning',
 					});
 					setProgress({ completed: 0, total: 0 });
 				} else if (batchStatus.status === 'FAILED') {
@@ -91,12 +103,12 @@ export function useGeneration({ clothing, selectedGender, selectedProjectName, s
 	};
 
 	const handleSnackbarClick = () => {
-		if (status.severity === 'success') {
-			router.push('/assets');
+		if (status.severity === 'success' || status.severity === 'warning') {
+			router.push(selectedProjectId ? `/assets?projectId=${selectedProjectId}` : '/assets');
 		}
 	};
 
 	const closeStatus = () => setStatus((s) => ({ ...s, open: false }));
 
-	return { generating, progress, canGenerate, handleGenerate, status, closeStatus, handleSnackbarClick };
+	return { generating, progress, canGenerate, handleGenerate, status, closeStatus, handleSnackbarClick, generatedAssets };
 }
