@@ -58,6 +58,16 @@ class ProjectService {
     return this.normalizeProject(data as Partial<Project>);
   }
 
+  public async deleteProject(projectId: number): Promise<void> {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok && response.status !== 204) throw new Error("Failed to delete project");
+  }
+
   public async updateProjectDetails(
     projectId: number,
     project: ProjectSavePayload,

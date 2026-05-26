@@ -60,6 +60,22 @@ export default function AssetsPage() {
 		}
 	};
 
+	const handleDeleteProject = (projectId: number) => {
+		setPendingDeleteId(projectId);
+	};
+
+	const confirmDeleteProject = async () => {
+		if (pendingDeleteId === null) return;
+		const id = pendingDeleteId;
+		setPendingDeleteId(null);
+		try {
+			await projectService.deleteProject(id);
+			setProjects((prev) => prev.filter((p) => p.id !== id));
+		} catch {
+			setProjectError('Verwijderen mislukt.');
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-50">
 			<Navbar onLogout={redirectToLogin} />
