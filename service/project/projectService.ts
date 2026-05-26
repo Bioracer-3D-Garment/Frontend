@@ -47,6 +47,20 @@ class ProjectService {
     return data as Project;
   }
 
+  public async deleteProject(projectId: number): Promise<void> {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (response.status === 204) return;
+    if (response.status === 401) throw Object.assign(new Error("Unauthorized"), { status: 401 });
+    if (response.status === 403) throw Object.assign(new Error("Forbidden"), { status: 403 });
+    if (response.status === 404) throw Object.assign(new Error("Not found"), { status: 404 });
+    throw new Error("Failed to delete project");
+  }
+
   public async updateProjectDetails(
     projectId: number,
     project: Project,

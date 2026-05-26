@@ -48,6 +48,24 @@ export default function AssetsPage() {
 		}
 	};
 
+	const handleDeleteProject = async (projectId: number) => {
+		try {
+			await projectService.deleteProject(projectId);
+			setProjects((prev) => prev.filter((p) => p.id !== projectId));
+		} catch (err: unknown) {
+			const status = (err as { status?: number }).status;
+			if (status === 401) {
+				redirectToLogin();
+			} else if (status === 403) {
+				setProjectError('Je hebt geen toestemming om dit project te verwijderen.');
+			} else if (status === 404) {
+				setProjectError('Project niet gevonden.');
+			} else {
+				setProjectError('Verwijderen mislukt.');
+			}
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-50">
 			<Navbar onLogout={redirectToLogin} />
@@ -116,7 +134,7 @@ export default function AssetsPage() {
 				)}
 
 				{!selectedProject && !loadingProjects && (
-				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} />
+				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} onDeleteProject={handleDeleteProject} />
 			)}
 
 				{selectedProject && <AssetGrid assets={filteredAssets} />}
