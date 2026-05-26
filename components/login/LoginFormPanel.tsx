@@ -5,7 +5,7 @@ export type LoginFormPanelProps = UserLoginFormProps;
 
 export function LoginFormPanel(props: LoginFormPanelProps) {
   return (
-    <div className="flex flex-col justify-between p-10 lg:p-16 mx-auto">
+    <div className="flex flex-col justify-between p-10 lg:p-16">
       <div className="flex items-center gap-2">
         <span className="inline-block w-2 h-8 bg-[#e2001a]" />
         <span className="font-extrabold tracking-[0.2em] text-black">BIORACER</span>

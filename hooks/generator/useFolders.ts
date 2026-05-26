@@ -13,19 +13,20 @@ export function useProjects() {
 		(project) => project.id === selectedProjectId,
 	);
 
+	const projectService = new ProjectService();
+
 	useEffect(() => {
 		let isActive = true;
-		const projectService = new ProjectService();
 
 		const loadProjects = async () => {
 			try {
-				const existingProjects = await projectService.getAllProjects();
+				const projectList = await projectService.getAllProjects();
 
 				if (isActive) {
-					setProjects(existingProjects);
+					setProjects(projectList);
 				}
 			} catch (err) {
-				console.error('Failed to load projects', err);
+				console.error('Failed to load projects for generator', err);
 			}
 		};
 
@@ -38,7 +39,6 @@ export function useProjects() {
 
 	const handleCreateProject = async () => {
 		const trimmedName = newProjectName.trim();
-		const projectService = new ProjectService();
 
 		if (!trimmedName) {
 			return;

@@ -2,9 +2,9 @@ import { Typography } from '@mui/material';
 
 export function LoginShowcasePanel() {
   return (
-    <div className="relative hidden lg:block min-h-screen">
+    <div className="relative hidden lg:block min-h-screen overflow-hidden">
       <img
-        src="https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=1600&h=1800&fit=crop"
+        src="https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=1400&h=1800&fit=crop"
         alt="Cycling"
         className="absolute inset-0 w-full h-full object-cover"
       />
