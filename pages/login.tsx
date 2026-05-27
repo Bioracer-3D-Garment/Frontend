@@ -5,8 +5,6 @@ import { login, saveJwtToken } from '@/service/auth/auth_service';
 
 type LoginJson = {
 	token?: string;
-	jwt?: string;
-	accessToken?: string;
 };
 
 export default function LoginPage() {
@@ -23,7 +21,7 @@ export default function LoginPage() {
 					}
 
 					const data = (await response.json()) as LoginJson;
-					const token = data.token ?? data.jwt ?? data.accessToken;
+					const token = data.token;
 
 					if (!token || typeof token !== 'string') {
 						return { ok: false, message: 'No token received from the server.' };

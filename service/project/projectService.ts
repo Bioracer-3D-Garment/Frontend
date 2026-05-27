@@ -31,6 +31,21 @@ class ProjectService {
     return data as Project[];
   }
 
+  public async getUserProjects(): Promise<Project[]> {
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/user`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user projects");
+    }
+
+    return response.json() as Promise<Project[]>;
+  }
+
   public async createProject(name: string): Promise<Project> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/projects`;
     const response = await fetch(url, {
@@ -47,36 +62,22 @@ class ProjectService {
     return data as Project;
   }
 
-  public async deleteProject(projectId: number): Promise<void> {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`;
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok && response.status !== 204) throw new Error("Failed to delete project");
-  }
-
   public async updateProjectDetails(
     projectId: number,
-    project: Project,
+    input: { name: string; coverImage: string },
   ): Promise<Project> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`;
     const response = await fetch(url, {
       method: "PUT",
       headers: this.getAuthHeaders(),
-      // send the project object directly (server typically expects the resource body),
-      // not wrapped inside a `project` key
-      body: JSON.stringify(project),
+      body: JSON.stringify(input),
     });
 
     if (!response.ok) {
       throw new Error("Failed to update project");
     }
 
-    const data = await response.json();
-
-    return data as Project;
+    return response.json() as Promise<Project>;
   }
 }
 

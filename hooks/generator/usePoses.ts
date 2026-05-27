@@ -19,11 +19,7 @@ export function usePoses() {
       return;
     }
 
-    // NEXT_PUBLIC_API_URL is e.g. "http://localhost:8080/api".
-    // Thumbnail paths are relative to the server root ("/poses/{id}/thumbnail"),
-    // so strip the "/api" suffix before prepending.
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? '';
-    const serverBase = apiUrl.replace(/\/api\/?$/, '');
 
     fetch(`${apiUrl}/poses`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -38,7 +34,7 @@ export function usePoses() {
             ...pose,
             selected: false,
             thumbnailUrl: pose.thumbnailUrl.startsWith('/')
-              ? `${serverBase}${pose.thumbnailUrl}`
+              ? `${apiUrl}${pose.thumbnailUrl}`
               : pose.thumbnailUrl,
           }))
         );

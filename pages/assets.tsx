@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Typography, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
+import { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
+import { Typography, Button } from '@mui/material';
 import { Download, ArrowBack } from '@mui/icons-material';
 import { Navbar } from '@/components/Navbar';
 import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
@@ -10,25 +11,28 @@ import { useAssets } from '@/hooks/assets/useAssets';
 import { useAssetProjects } from '@/hooks/assets/useAssetProjects';
 import type { Project } from '@/types/types';
 import ProjectService from '@/service/project/projectService';
+import AssetService from '@/service/asset/assetService';
 
 export default function AssetsPage() {
+	const router = useRouter();
 	const { redirectToLogin } = useAuthRedirects();
 	const [projects, setProjects] = useState<Project[]>([]);
-	const projectService = new ProjectService();
+	const projectService = useMemo(() => new ProjectService(), []);
 
 	const { selectedProjectId, setSelectedProjectId, openEditDialog, editDialog } = useAssetProjects(
 		projectService,
 		(updated) => setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
 	);
-    
+
+	const assetService = useMemo(() => new AssetService(), []);
 	const [loadingProjects, setLoadingProjects] = useState(true);
 	const [projectError, setProjectError] = useState('');
-	const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-	const { assets, filter, setFilter, filteredAssets, filters } = useAssets(selectedProjectId);
+	const [downloadingAll, setDownloadingAll] = useState(false);
+	const { assets, filter, setFilter, filteredAssets, filters, error: assetError, deleteAsset } = useAssets(selectedProjectId);
 
 	useEffect(() => {
 		projectService
-			.getAllProjects()
+			.getUserProjects()
 			.then((projectList) => {
 				setProjects(projectList);
 			})
@@ -38,7 +42,17 @@ export default function AssetsPage() {
 			.finally(() => {
 				setLoadingProjects(false);
 			});
-	}, []);
+	}, [projectService]);
+
+	useEffect(() => {
+		const { projectId } = router.query;
+		if (projectId && typeof projectId === 'string') {
+			const id = parseInt(projectId, 10);
+			if (!isNaN(id)) {
+				setSelectedProjectId(id);
+			}
+		}
+	}, [router.query.projectId]);
 
 	const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null;
 
@@ -49,19 +63,23 @@ export default function AssetsPage() {
 		}
 	};
 
-	const handleDeleteProject = (projectId: number) => {
-		setPendingDeleteId(projectId);
+	const handleDeleteAsset = async (assetId: number) => {
+		try {
+			await deleteAsset(assetId);
+		} catch {
+			setProjectError('Failed to delete asset.');
+		}
 	};
 
-	const confirmDeleteProject = async () => {
-		if (pendingDeleteId === null) return;
-		const id = pendingDeleteId;
-		setPendingDeleteId(null);
+	const handleDownloadAll = async () => {
+		if (!selectedProject || downloadingAll) return;
+		setDownloadingAll(true);
 		try {
-			await projectService.deleteProject(id);
-			setProjects((prev) => prev.filter((p) => p.id !== id));
+			await assetService.downloadProjectAssets(selectedProject.id, selectedProject.name);
 		} catch {
-			setProjectError('Verwijderen mislukt.');
+			setProjectError('Failed to download project assets.');
+		} finally {
+			setDownloadingAll(false);
 		}
 	};
 
@@ -84,11 +102,11 @@ export default function AssetsPage() {
 						<Typography variant="body1" className="text-gray-500 mt-1">
 							{selectedProject
 								? `${filteredAssets.length} asset${filteredAssets.length !== 1 ? 's' : ''} in this project.`
-								: `${projects.length} project${projects.length !== 1 ? 's' : ''} · ${assets.length} total assets.`}
+								: `${projects.length} project${projects.length !== 1 ? 's' : ''}.`}
 						</Typography>
-						{projectError && (
+						{(projectError || assetError) && (
 							<Typography variant="body2" className="text-red-600 mt-2">
-								{projectError}
+								{projectError || assetError}
 							</Typography>
 						)}
 					</div>
@@ -96,9 +114,11 @@ export default function AssetsPage() {
 						<Button
 							variant="contained"
 							startIcon={<Download />}
-							className="bg-[#e2001a] text-white px-6 py-3 font-bold tracking-widest transition-all hover:bg-[#b80015] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/40"
+							disabled={downloadingAll}
+							onClick={handleDownloadAll}
+							className="bg-[#e2001a] text-white px-6 py-3 font-bold tracking-widest transition-all hover:bg-[#b80015] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/40 disabled:opacity-60"
 						>
-							DOWNLOAD ALL
+							{downloadingAll ? 'DOWNLOADING...' : 'DOWNLOAD ALL'}
 						</Button>
 					)}
 				</div>
@@ -133,31 +153,27 @@ export default function AssetsPage() {
 				)}
 
 				{!selectedProject && !loadingProjects && (
-				<ProjectGrid projects={projects} onSelectProject={setSelectedProjectId} onEditProject={handleEditProject} onDeleteProject={handleDeleteProject} />
-			)}
+					<ProjectGrid
+						projects={projects}
+						onSelectProject={setSelectedProjectId}
+						onEditProject={handleEditProject}
+					/>
+				)}
 
-				{selectedProject && <AssetGrid assets={filteredAssets} />}
+				{selectedProject && <AssetGrid assets={filteredAssets} onDelete={handleDeleteAsset} />}
 			</div>
-		<Dialog open={pendingDeleteId !== null} onClose={() => setPendingDeleteId(null)}>
-				<DialogTitle>Project verwijderen</DialogTitle>
-				<DialogContent>
-					<DialogContentText>
-						Ben je zeker dat je dit project wilt verwijderen? Dit kan niet ongedaan worden gemaakt.
-					</DialogContentText>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => setPendingDeleteId(null)}>Annuleren</Button>
-					<Button onClick={confirmDeleteProject} color="error" variant="contained">Verwijderen</Button>
-				</DialogActions>
-			</Dialog>
-		<EditProjectDialog
-			open={editDialog.open}
-			projectName={editDialog.projectName}
-			projectImagePreview={editDialog.projectImagePreview}
-			onProjectNameChange={editDialog.onProjectNameChange}
-			onImageFileChange={editDialog.onImageFileChange}
-			onClose={editDialog.onClose}
-			onSave={editDialog.onSave}
-		/>		</div>
+
+			<EditProjectDialog
+				open={editDialog.open}
+				projectName={editDialog.projectName}
+				projectImageUrl={editDialog.projectImageUrl}
+				onProjectNameChange={editDialog.onProjectNameChange}
+				onImageUrlChange={editDialog.onImageUrlChange}
+				onClose={editDialog.onClose}
+				onSave={editDialog.onSave}
+				isSaving={editDialog.isSaving}
+				saveError={editDialog.saveError}
+			/>
+		</div>
 	);
 }

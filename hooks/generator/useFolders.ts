@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Project } from '@/types/types';
-import { createProject } from '@/utils/folder';
 import ProjectService from '@/service/project/projectService';
 
 export function useProjects() {
@@ -8,12 +7,20 @@ export function useProjects() {
 	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 	const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false);
 	const [newProjectName, setNewProjectName] = useState('');
+	const [createProjectError, setCreateProjectError] = useState('');
 
 	const selectedProject = projects.find(
 		(project) => project.id === selectedProjectId,
 	);
 
-	const projectService = new ProjectService();
+	const projectService = useMemo(() => new ProjectService(), []);
+
+	useEffect(() => {
+		projectService
+			.getUserProjects()
+			.then(setProjects)
+			.catch((err) => console.error('Failed to load projects', err));
+	}, [projectService]);
 
 	const handleCreateProject = async () => {
 		const trimmedName = newProjectName.trim();
@@ -22,25 +29,26 @@ export function useProjects() {
 			return;
 		}
 
+		setCreateProjectError('');
+
 		const existing = projects.find((project) => project.name.toLowerCase() === trimmedName.toLowerCase());
 
 		if (existing) {
 			setSelectedProjectId(existing.id);
-		} else {
-			try {
-				const project = await projectService.createProject(trimmedName);
-				setProjects((currentProjects) => [...currentProjects, project]);
-				setSelectedProjectId(project.id);
-			} catch (err) {
-				console.error('Failed to create project via API, falling back to local creation', err);
-				const project = createProject(trimmedName);
-				setProjects((currentProjects) => [...currentProjects, project]);
-				setSelectedProjectId(project.id);
-			}
+			setNewProjectName('');
+			setNewProjectDialogOpen(false);
+			return;
 		}
 
-		setNewProjectName('');
-		setNewProjectDialogOpen(false);
+		try {
+			const project = await projectService.createProject(trimmedName);
+			setProjects((currentProjects) => [...currentProjects, project]);
+			setSelectedProjectId(project.id);
+			setNewProjectName('');
+			setNewProjectDialogOpen(false);
+		} catch {
+			setCreateProjectError('Failed to create project. Please try again.');
+		}
 	};
 
 	return {
@@ -55,6 +63,7 @@ export function useProjects() {
 			onNameChange: setNewProjectName,
 			onCreate: handleCreateProject,
 			onClose: () => setNewProjectDialogOpen(false),
+			error: createProjectError,
 		},
 	};
 }

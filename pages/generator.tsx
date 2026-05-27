@@ -14,11 +14,11 @@ import { useGeneration } from '@/hooks/generator/useGeneration';
 
 export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
-	const { clothing, handleFileUpload, removeClothing, toggleCategory } = useClothing();
+	const { zipFile, handleZipUpload } = useClothing();
 	const { projects, selectedProjectId, selectedProject, setSelectedProjectId, openCreateProjectDialog, dialog } = useProjects();
 	const { models, selectedModel, selectedGender, selectModel } = useModels();
 	const generation = useGeneration({
-		clothing,
+		zipFile,
 		selectedGender,
 		selectedProjectName: selectedProject?.name ?? '',
 		selectedProjectId,
@@ -40,7 +40,7 @@ export default function GeneratorPage() {
 						Create studio-quality visuals.
 					</Typography>
 					<Typography variant="body1" className="text-gray-500 max-w-2xl">
-						Upload your cycling apparel, choose your model, and we&apos;ll render product images with pre-configured poses, lighting and camera angles.
+						Upload a ZIP of your cycling apparel, choose gender, and we&apos;ll render front, back and side product images automatically.
 					</Typography>
 				</div>
 			</div>
@@ -54,11 +54,8 @@ export default function GeneratorPage() {
 				/>
 
 				<ClothingUploadSection
-					clothing={clothing}
-					subtitle={`${clothing.length} item${clothing.length !== 1 ? 's' : ''} added`}
-					onFileUpload={handleFileUpload}
-					onRemove={removeClothing}
-					onToggleCategory={toggleCategory}
+					zipFile={zipFile}
+					onZipUpload={handleZipUpload}
 				/>
 
 				<ModelSelectionSection
@@ -68,7 +65,7 @@ export default function GeneratorPage() {
 				/>
 
 				<GenerateSection
-					clothingCount={clothing.length}
+					clothingCount={zipFile ? 1 : 0}
 					selectedGender={selectedGender ?? ''}
 					selectedProjectName={selectedProject?.name ?? ''}
 					generating={generation.generating}
@@ -76,6 +73,33 @@ export default function GeneratorPage() {
 					canGenerate={generation.canGenerate}
 					onGenerate={generation.handleGenerate}
 				/>
+
+				{generation.generatedAssets && generation.generatedAssets.length > 0 && (
+					<section>
+						<div className="flex items-center gap-2 mb-4">
+							<span className="inline-block w-8 h-0.75 bg-[#e2001a]" />
+							<Typography variant="overline" className="text-[#e2001a] font-bold tracking-[0.2em]">
+								GENERATED · {generation.generatedAssets.length} ASSET{generation.generatedAssets.length !== 1 ? 'S' : ''}
+							</Typography>
+						</div>
+						<div className="flex gap-3 overflow-x-auto pb-2">
+							{generation.generatedAssets.map((asset) => (
+								<div key={asset.id} className="flex-shrink-0 w-32 rounded overflow-hidden bg-gray-100 border border-gray-200">
+									<img
+										src={asset.thumbnailUrl}
+										alt={`${asset.productId} · ${asset.poseId}`}
+										className="w-full h-32 object-cover"
+									/>
+									<div className="px-2 py-1">
+										<Typography variant="caption" className="text-gray-500 block text-center capitalize">
+											{asset.poseId}
+										</Typography>
+									</div>
+								</div>
+							))}
+						</div>
+					</section>
+				)}
 			</div>
 
 			<GenerationFeedback status={generation.status} onClose={generation.closeStatus} onClick={generation.handleSnackbarClick} />
