@@ -50,6 +50,7 @@ export interface Model {
   name: string;
   profilePicture: string;
   gender: 'male' | 'female';
+  poses: string[];
   selected: boolean;
 }
 
@@ -84,6 +85,13 @@ export interface GeneratorStatus {
   open: boolean;
   message: string;
   severity: 'success' | 'info' | 'warning' | 'error';
+}
+
+export interface GenerationOptions {
+  resolution:  '1k' | '2k' | '4k' | string;
+  frameFormat: 'square' | 'landscape' | 'portrait' | string;
+  frameOutputFormat: 'png' | 'jpeg' | string;
+  prompt?: string;
 }
 
 export interface EditProjectDialogState {
