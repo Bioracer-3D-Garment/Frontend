@@ -45,12 +45,20 @@ export interface BatchStatus {
   assets: GeneratedAsset[] | null;
 }
 
+export interface ModelPhotos {
+  front: string;
+  back: string;
+  side: string;
+}
+
 export interface Model {
   id: number;
   name: string;
   profilePicture: string;
   gender: 'male' | 'female';
   selected: boolean;
+  photos?: ModelPhotos;
+  isCustom?: boolean;
 }
 
 export interface Asset {
