@@ -25,7 +25,19 @@ export function AdvancedSection({ options, onChange }: AdvancedSectionProps) {
         </IconButton>
       </div>
 
-      {open && <div className="px-6 py-6"><AdvancedSettings options={options} onChange={onChange} /></div>}
+      {open && (
+        <div className="px-6 py-6">
+          <AdvancedSettings
+            values={{
+              resolution: options.resolution,
+              frameFormat: options.frameFormat,
+              frameOutputFormat: options.frameOutputFormat,
+              prompt: options.prompt,
+            }}
+            onChange={(patch) => onChange({ ...options, ...patch })}
+          />
+        </div>
+      )}
     </section>
   );
 }

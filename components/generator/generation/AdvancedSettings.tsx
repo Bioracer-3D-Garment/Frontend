@@ -1,27 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import type { GenerationOptions } from '@/types/types';
 
-interface AdvancedSettingsProps {
-  options: GenerationOptions;
-  onChange: (opts: GenerationOptions) => void;
+type Resolution = '1k' | '2k' | '4k';
+type FrameFormat = 'portrait' | 'square' | 'landscape';
+type FrameOutputFormat = 'png' | 'jpeg';
+
+interface AdvancedSettingsValues {
+  resolution: Resolution;
+  frameFormat: FrameFormat;
+  frameOutputFormat: FrameOutputFormat;
+  prompt?: string | undefined;
 }
 
-export function AdvancedSettings({ options, onChange }: AdvancedSettingsProps) {
-  const handleResolution = (_: React.MouseEvent<HTMLElement>, value: string | null) => {
-    if (!value) return;
-    onChange({ ...options, resolution: value });
-  };
+interface AdvancedSettingsProps {
+  values: AdvancedSettingsValues;
+  onChange: (patch: Partial<AdvancedSettingsValues>) => void;
+}
 
-  const handleFrameFormat = (_: React.MouseEvent<HTMLElement>, value: string | null) => {
-    if (!value) return;
-    onChange({ ...options, frameFormat: value });
-  };
+export function AdvancedSettings({ values, onChange }: AdvancedSettingsProps) {
+  const [resolution, setResolution] = useState<Resolution>(values.resolution);
+  const [frameFormat, setFrameFormat] = useState<FrameFormat>(values.frameFormat);
+  const [frameOutputFormat, setFrameOutputFormat] = useState<FrameOutputFormat>(values.frameOutputFormat);
+  const [prompt, setPrompt] = useState<string>(values.prompt ?? '');
 
-  const handleOutputFormat = (_: React.MouseEvent<HTMLElement>, value: string | null) => {
-    if (!value) return;
-    onChange({ ...options, frameOutputFormat: value });
-  };
+  useEffect(() => {
+    setResolution(values.resolution);
+    setFrameFormat(values.frameFormat);
+    setFrameOutputFormat(values.frameOutputFormat);
+    setPrompt(values.prompt ?? '');
+  }, [values]);
 
   const buttonClasses =
     'min-h-12 flex-1 border-0 px-5 py-3 text-sm font-semibold normal-case tracking-wide text-gray-500 transition-colors hover:bg-gray-50 [&.Mui-selected]:!bg-[#e2001a] [&.Mui-selected]:!text-white [&.Mui-selected:hover]:!bg-[#b80015]';
@@ -36,8 +43,12 @@ export function AdvancedSettings({ options, onChange }: AdvancedSettingsProps) {
           <ToggleButtonGroup
             exclusive
             fullWidth
-            value={options.resolution}
-            onChange={handleResolution}
+            value={resolution}
+            onChange={(_: React.MouseEvent<HTMLElement>, value: Resolution | null) => {
+              if (!value) return;
+              setResolution(value);
+              onChange({ resolution: value });
+            }}
             className={groupClasses}
             sx={{
               '& .MuiToggleButton-root': {
@@ -60,8 +71,12 @@ export function AdvancedSettings({ options, onChange }: AdvancedSettingsProps) {
           <ToggleButtonGroup
             exclusive
             fullWidth
-            value={options.frameFormat}
-            onChange={handleFrameFormat}
+            value={frameFormat}
+            onChange={(_: React.MouseEvent<HTMLElement>, value: FrameFormat | null) => {
+              if (!value) return;
+              setFrameFormat(value);
+              onChange({ frameFormat: value });
+            }}
             className={groupClasses}
             sx={{
               '& .MuiToggleButton-root': {
@@ -84,8 +99,12 @@ export function AdvancedSettings({ options, onChange }: AdvancedSettingsProps) {
           <ToggleButtonGroup
             exclusive
             fullWidth
-            value={options.frameOutputFormat}
-            onChange={handleOutputFormat}
+            value={frameOutputFormat}
+            onChange={(_: React.MouseEvent<HTMLElement>, value: FrameOutputFormat | null) => {
+              if (!value) return;
+              setFrameOutputFormat(value);
+              onChange({ frameOutputFormat: value });
+            }}
             className={groupClasses}
             sx={{
               '& .MuiToggleButton-root': {
@@ -105,14 +124,17 @@ export function AdvancedSettings({ options, onChange }: AdvancedSettingsProps) {
 
       <div>
         <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-gray-500">Prompt</h3>
-        <TextField
+          <TextField
           placeholder="A professional cycling athlete wearing the outfit, photographed in a modern studio with clean white background, dramatic side lighting, sharp focus, photorealistic quality."
           multiline
           minRows={3}
           maxRows={6}
           fullWidth
-          value={options.prompt ?? ''}
-          onChange={(e) => onChange({ ...options, prompt: e.target.value })}
+          value={prompt ?? ''}
+          onChange={(e) => {
+            setPrompt(e.target.value);
+            onChange({ prompt: e.target.value });
+          }}
           className="bg-white"
           inputProps={{ 'aria-label': 'generation prompt' }}
           sx={{

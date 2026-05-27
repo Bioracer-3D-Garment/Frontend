@@ -88,9 +88,9 @@ export interface GeneratorStatus {
 }
 
 export interface GenerationOptions {
-  resolution:  '1k' | '2k' | '4k' | string;
-  frameFormat: 'square' | 'landscape' | 'portrait' | string;
-  frameOutputFormat: 'png' | 'jpeg' | string;
+  resolution:  '1k' | '2k' | '4k' ;
+  frameFormat: 'square' | 'landscape' | 'portrait';
+  frameOutputFormat: 'png' | 'jpeg';
   prompt?: string;
 }
 
