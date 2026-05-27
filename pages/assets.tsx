@@ -173,6 +173,8 @@ export default function AssetsPage() {
 				onSave={editDialog.onSave}
 				isSaving={editDialog.isSaving}
 				saveError={editDialog.saveError}
+				onDelete={editDialog.handleDelete}
+				isDeleting={editDialog.isDeleting}
 			/>
 		</div>
 	);
