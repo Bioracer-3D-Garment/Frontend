@@ -16,7 +16,7 @@ export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
 	const { zipFile, handleZipUpload } = useClothing();
 	const { projects, selectedProjectId, selectedProject, setSelectedProjectId, openCreateProjectDialog, dialog } = useProjects();
-	const { models, selectedModels, selectedGender, toggleModel, addModel, updateModel, deleteModel } = useModels();
+	const { models, loading: modelsLoading, selectedModels, selectedGender, toggleModel, addModel, updateModel, deleteModel } = useModels();
 	const generation = useGeneration({
 		zipFile,
 		selectedGender,
@@ -60,6 +60,7 @@ export default function GeneratorPage() {
 
 				<ModelSelectionSection
 					models={models}
+					loading={modelsLoading}
 					selectedModels={selectedModels}
 					subtitle={selectedModels.length > 0 ? selectedModels.map((m) => m.name).join(', ') : 'None selected'}
 					onToggleModel={toggleModel}

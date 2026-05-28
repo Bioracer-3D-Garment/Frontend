@@ -1,51 +1,85 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Model } from '@/types/types';
-import { gaelleModel } from './models/gaelle';
-import { patrickModel } from './models/patrick';
-
-const initialModels: Model[] = [patrickModel, gaelleModel];
+import modelService from '@/service/model/modelService';
 
 export function useModels() {
-  const [models, setModels] = useState<Model[]>(initialModels);
+  const [models, setModels] = useState<Model[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchModels = async (preserveSelected?: number[]) => {
+    try {
+      const fresh = await modelService.getModels();
+      setModels(
+        preserveSelected
+          ? fresh.map((m) => ({ ...m, selected: preserveSelected.includes(m.id) }))
+          : fresh,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load models');
+    }
+  };
+
+  useEffect(() => {
+    fetchModels().finally(() => setLoading(false));
+  }, []);
 
   const toggleModel = (id: number) => {
     setModels((current) => {
       const target = current.find((m) => m.id === id);
       if (!target) return current;
-
       const selectedModels = current.filter((m) => m.selected);
       const activeGender = selectedModels[0]?.gender;
-
-      // Block if opposite gender is already selected
       if (!target.selected && activeGender && target.gender !== activeGender) {
         return current;
       }
-
-      return current.map((model) =>
-        model.id === id ? { ...model, selected: !model.selected } : model
-      );
+      return current.map((m) => (m.id === id ? { ...m, selected: !m.selected } : m));
     });
   };
 
-  const addModel = (model: Omit<Model, 'id' | 'selected'>) => {
-    setModels((current) => [
-      ...current,
-      { ...model, id: Date.now(), selected: false, isCustom: true },
-    ]);
+  const addModel = async (model: Omit<Model, 'id' | 'selected'>) => {
+    await modelService.createModel(model);
+    const selectedIds = models.filter((m) => m.selected).map((m) => m.id);
+    await fetchModels(selectedIds);
   };
 
-  const updateModel = (id: number, updates: Partial<Omit<Model, 'id'>>) => {
-    setModels((current) =>
-      current.map((model) => (model.id === id ? { ...model, ...updates } : model))
-    );
+  const updateModel = async (id: number, updates: Partial<Omit<Model, 'id'>>) => {
+    const current = models.find((m) => m.id === id);
+    if (!current) return;
+    const merged: Omit<Model, 'id' | 'selected'> = { ...current, ...updates };
+    setModels((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)));
+    try {
+      await modelService.updateModel(id, merged);
+    } catch (err) {
+      const selectedIds = models.filter((m) => m.selected).map((m) => m.id);
+      await fetchModels(selectedIds);
+      throw err;
+    }
   };
 
-  const deleteModel = (id: number) => {
-    setModels((current) => current.filter((model) => model.id !== id));
+  const deleteModel = async (id: number) => {
+    const snapshot = models;
+    setModels((prev) => prev.filter((m) => m.id !== id));
+    try {
+      await modelService.deleteModel(id);
+    } catch (err) {
+      setModels(snapshot);
+      throw err;
+    }
   };
 
   const selectedModels = models.filter((m) => m.selected);
   const selectedGender = selectedModels[0]?.gender ?? null;
 
-  return { models, selectedModels, selectedGender, toggleModel, addModel, updateModel, deleteModel };
+  return {
+    models,
+    loading,
+    error,
+    selectedModels,
+    selectedGender,
+    toggleModel,
+    addModel,
+    updateModel,
+    deleteModel,
+  };
 }
