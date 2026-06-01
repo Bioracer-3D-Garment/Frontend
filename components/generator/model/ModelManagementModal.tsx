@@ -10,20 +10,18 @@ import {
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
-  CircularProgress,
 } from '@mui/material';
 import { Add, Edit, Delete, ArrowBack, CloudUpload, Check } from '@mui/icons-material';
 import type { Model, ModelPhotos } from '@/types/types';
-import { uploadImage } from '@/service/cloudinary/uploadImage';
 
 interface ModelManagementModalProps {
   open: boolean;
   models: Model[];
   onClose: () => void;
   onToggle: (id: number) => void;
-  onAdd: (model: Omit<Model, 'id' | 'selected'>) => Promise<void>;
-  onUpdate: (id: number, updates: Partial<Omit<Model, 'id'>>) => Promise<void>;
-  onDelete: (id: number) => Promise<void>;
+  onAdd: (model: Omit<Model, 'id' | 'selected'>) => void;
+  onUpdate: (id: number, updates: Partial<Omit<Model, 'id'>>) => void;
+  onDelete: (id: number) => void;
 }
 
 interface FormState {
@@ -33,25 +31,21 @@ interface FormState {
   photos: { front: string | null; back: string | null; side: string | null };
 }
 
-type PhotoSlot = 'profilePhoto' | 'front' | 'back' | 'side';
-
 function UploadZone({
   label,
   optional,
   preview,
-  uploading,
-  onFileSelected,
+  onChange,
 }: {
   label: string;
   optional?: boolean;
   preview: string | null;
-  uploading: boolean;
-  onFileSelected: (file: File) => void;
+  onChange: (url: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  const handleFile = (file: File) => onFileSelected(file);
+  const handleFile = (file: File) => onChange(URL.createObjectURL(file));
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -60,24 +54,20 @@ function UploadZone({
         {optional && <span className="text-[10px] text-gray-400">(opt.)</span>}
       </div>
       <div
-        onClick={() => !uploading && inputRef.current?.click()}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f && !uploading) handleFile(f); }}
+        onClick={() => inputRef.current?.click()}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
         onDragOver={(e) => e.preventDefault()}
         onDragEnter={() => setDragging(true)}
         onDragLeave={() => setDragging(false)}
-        className={`relative flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-all duration-150 ${
-          uploading
-            ? 'cursor-wait border-gray-200 bg-gray-50'
-            : dragging
-            ? 'scale-[1.02] cursor-pointer border-[#e2001a] bg-red-50 shadow-[0_0_0_4px_rgba(226,0,26,0.08)]'
+        className={`relative flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-all duration-150 ${
+          dragging
+            ? 'scale-[1.02] border-[#e2001a] bg-red-50 shadow-[0_0_0_4px_rgba(226,0,26,0.08)]'
             : preview
-            ? 'cursor-pointer border-[#e2001a]/40 bg-red-50/40 hover:border-[#e2001a]/70 hover:bg-red-50/70'
-            : 'cursor-pointer border-gray-200 bg-gray-50 hover:border-[#e2001a]/50 hover:bg-red-50/30'
+            ? 'border-[#e2001a]/40 bg-red-50/40 hover:border-[#e2001a]/70 hover:bg-red-50/70'
+            : 'border-gray-200 bg-gray-50 hover:border-[#e2001a]/50 hover:bg-red-50/30'
         }`}
       >
-        {uploading ? (
-          <CircularProgress size={20} sx={{ color: '#e2001a' }} />
-        ) : preview ? (
+        {preview ? (
           <>
             <img src={preview} alt={label} className="h-full w-full rounded-xl object-cover" />
             <div className={`absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl bg-black/40 transition-opacity ${dragging ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}>
@@ -93,13 +83,7 @@ function UploadZone({
             </span>
           </>
         )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-        />
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
       </div>
     </div>
   );
@@ -125,22 +109,16 @@ export function ModelManagementModal({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [uploadingSlots, setUploadingSlots] = useState<Set<PhotoSlot>>(new Set());
 
   const selectedModels = models.filter((m) => m.selected);
   const activeGender = selectedModels[0]?.gender ?? null;
   const isDisabled = (model: Model) =>
     !model.selected && activeGender !== null && model.gender !== activeGender;
 
-  const anyUploading = uploadingSlots.size > 0;
-
   const openAdd = () => {
     setEditingId(null);
     setForm(emptyForm);
     setSubmitAttempted(false);
-    setSaveError(null);
     setView('form');
   };
 
@@ -157,7 +135,6 @@ export function ModelManagementModal({
       },
     });
     setSubmitAttempted(false);
-    setSaveError(null);
     setView('form');
   };
 
@@ -166,8 +143,6 @@ export function ModelManagementModal({
     setEditingId(null);
     setForm(emptyForm);
     setSubmitAttempted(false);
-    setSaveError(null);
-    setUploadingSlots(new Set());
   };
 
   const handleClose = () => {
@@ -175,74 +150,33 @@ export function ModelManagementModal({
     onClose();
   };
 
-  const handlePhotoFile = (slot: PhotoSlot) => async (file: File) => {
-    // Show a local blob preview immediately while uploading
-    const blobUrl = URL.createObjectURL(file);
-    if (slot === 'profilePhoto') {
-      setForm((f) => ({ ...f, profilePhoto: blobUrl }));
-    } else {
-      setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: blobUrl } }));
-    }
-
-    setUploadingSlots((prev) => new Set(prev).add(slot));
-    try {
-      const secureUrl = await uploadImage(file);
-      if (slot === 'profilePhoto') {
-        setForm((f) => ({ ...f, profilePhoto: secureUrl }));
-      } else {
-        setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: secureUrl } }));
-      }
-    } catch {
-      // Upload failed — clear the slot so the user can retry
-      if (slot === 'profilePhoto') {
-        setForm((f) => ({ ...f, profilePhoto: null }));
-      } else {
-        setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: null } }));
-      }
-    } finally {
-      setUploadingSlots((prev) => {
-        const next = new Set(prev);
-        next.delete(slot);
-        return next;
-      });
-    }
-  };
-
   const isFormValid =
     form.name.trim() && form.photos.front && form.photos.back && form.photos.side;
 
   const showNameError = submitAttempted && !form.name.trim();
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSubmitAttempted(true);
-    if (!isFormValid || anyUploading) return;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const photos: ModelPhotos = {
-        front: form.photos.front!,
-        back: form.photos.back!,
-        side: form.photos.side!,
-      };
-      const profilePicture = form.profilePhoto ?? photos.front;
-      if (editingId !== null) {
-        await onUpdate(editingId, { name: form.name.trim(), gender: form.gender, profilePicture, photos });
-      } else {
-        await onAdd({ name: form.name.trim(), gender: form.gender, profilePicture, photos, isCustom: true });
-      }
-      handleBack();
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setSaving(false);
+    if (!isFormValid) return;
+    const photos: ModelPhotos = {
+      front: form.photos.front!,
+      back: form.photos.back!,
+      side: form.photos.side!,
+    };
+    const profilePicture = form.profilePhoto ?? photos.front;
+    if (editingId !== null) {
+      onUpdate(editingId, { name: form.name.trim(), gender: form.gender, profilePicture, photos });
+    } else {
+      onAdd({ name: form.name.trim(), gender: form.gender, profilePicture, photos, isCustom: true });
     }
+    handleBack();
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle className="flex items-center gap-2 font-bold">
         {view === 'form' && (
-          <IconButton size="small" onClick={handleBack} disabled={saving} className="!mr-1">
+          <IconButton size="small" onClick={handleBack} className="!mr-1">
             <ArrowBack fontSize="small" />
           </IconButton>
         )}
@@ -327,6 +261,7 @@ export function ModelManagementModal({
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                
                 placeholder="Model name"
                 className={`w-full rounded-xl border-2 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:bg-white focus:border-[#e2001a] ${
                   showNameError ? 'border-[#e2001a]' : 'border-gray-200 hover:border-gray-300'
@@ -369,42 +304,32 @@ export function ModelManagementModal({
                   label="Cover photo"
                   optional
                   preview={form.profilePhoto ?? form.photos.front}
-                  uploading={uploadingSlots.has('profilePhoto')}
-                  onFileSelected={handlePhotoFile('profilePhoto')}
+                  onChange={(url) => setForm((f) => ({ ...f, profilePhoto: url }))}
                 />
                 {(['front', 'back', 'side'] as const).map((key) => (
                   <UploadZone
                     key={key}
                     label={key.charAt(0).toUpperCase() + key.slice(1)}
                     preview={form.photos[key]}
-                    uploading={uploadingSlots.has(key)}
-                    onFileSelected={handlePhotoFile(key)}
+                    onChange={(url) => setForm((f) => ({ ...f, photos: { ...f.photos, [key]: url } }))}
                   />
                 ))}
               </div>
-              {anyUploading && (
-                <p className="text-xs text-gray-400">Uploading photos…</p>
-              )}
             </div>
-
-            {saveError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[#e2001a]">{saveError}</p>
-            )}
           </div>
         )}
       </DialogContent>
 
       {view === 'form' ? (
         <DialogActions className="px-6 pb-6">
-          <Button onClick={handleBack} disabled={saving} className="!text-black">
+          <Button onClick={handleBack} className="!text-black">
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
-            disabled={!isFormValid || anyUploading || saving}
+            disabled={!isFormValid}
             className="!bg-[#e2001a] !text-white font-bold transition-all hover:!bg-[#b80015] hover:scale-105 disabled:!bg-gray-300 disabled:!text-gray-500"
-            startIcon={saving ? <CircularProgress size={14} sx={{ color: 'white' }} /> : undefined}
           >
             {editingId !== null ? 'Save' : 'Add'}
           </Button>
