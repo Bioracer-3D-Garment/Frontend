@@ -9,8 +9,10 @@ interface EditProjectDialogProps {
   onImageUrlChange: (url: string) => void;
   onClose: () => void;
   onSave: () => void;
+  onDelete: () => void;
   isSaving?: boolean;
   saveError?: string;
+  isDeleting?: boolean;
 }
 
 export function EditProjectDialog({
@@ -21,8 +23,10 @@ export function EditProjectDialog({
   onImageUrlChange,
   onClose,
   onSave,
+  onDelete,
   isSaving,
   saveError,
+  isDeleting,
 }: EditProjectDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -69,19 +73,32 @@ export function EditProjectDialog({
           </div>
         </div>
 
-        {saveError && <p className="text-red-600 text-sm mt-3">{saveError}</p>}
+        
+
+        {saveError && (
+          <p className="text-red-600 text-sm mt-3">{saveError}</p>
+        )}
 
         <div className="flex items-center justify-between mt-6">
           <button
             onClick={onClose}
             className="text-gray-500"
-            disabled={isSaving}
+            disabled={isSaving || isDeleting}
           >
             Cancel
           </button>
+
+          <button
+            onClick={onDelete}
+            disabled={isDeleting || isSaving}
+            className="text-red-600 font-medium hover:text-red-800 disabled:opacity-50"
+          >
+            {isDeleting ? "Deleting…" : "Delete Folder"}
+          </button>
+
           <button
             onClick={onSave}
-            disabled={!projectName.trim() || isSaving}
+            disabled={!projectName.trim() || isSaving || isDeleting}
             className="bg-[#e2001a] text-white px-6 py-3 rounded shadow-md font-bold hover:bg-[#b80015] disabled:opacity-50"
           >
             {isSaving ? "Saving…" : "Save Changes"}
