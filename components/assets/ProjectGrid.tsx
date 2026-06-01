@@ -1,6 +1,7 @@
 import { Typography } from "@mui/material";
 import { Edit as EditIcon } from "@mui/icons-material";
 import type { Project } from "@/types/types";
+import { CldImage } from "next-cloudinary";
 
 interface ProjectGridProps {
   projects: Project[];
@@ -31,7 +32,9 @@ export function ProjectGrid({
         >
           <div className="relative aspect-square bg-gray-100 overflow-hidden w-full">
             {project.coverImage ? (
-              <img
+              <CldImage
+                width="300"
+                height="300"
                 src={project.coverImage}
                 alt={project.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

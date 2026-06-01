@@ -1,6 +1,7 @@
-import { Typography, IconButton } from '@mui/material';
-import { Download, Delete } from '@mui/icons-material';
-import type { Asset } from '@/types/types';
+import { Typography, IconButton } from "@mui/material";
+import { Download, Delete } from "@mui/icons-material";
+import type { Asset } from "@/types/types";
+import { CldImage } from "next-cloudinary";
 
 interface AssetGridProps {
   assets: Asset[];
@@ -22,7 +23,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
     const response = await fetch(asset.secureUrl);
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = objectUrl;
     a.download = `${asset.clothing}_${asset.model}.jpg`;
     a.click();
@@ -44,11 +45,14 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
       {[...byGarment.entries()].map(([garmentName, garmentAssets]) => (
         <div key={garmentName}>
           <div className="flex items-center gap-3 mb-4">
-            <Typography variant="subtitle1" className="font-extrabold text-black tracking-wide uppercase">
+            <Typography
+              variant="subtitle1"
+              className="font-extrabold text-black tracking-wide uppercase"
+            >
               {garmentName}
             </Typography>
             <span className="text-xs text-gray-400 font-semibold">
-              {garmentAssets.length} view{garmentAssets.length !== 1 ? 's' : ''}
+              {garmentAssets.length} view{garmentAssets.length !== 1 ? "s" : ""}
             </span>
           </div>
 
@@ -59,8 +63,10 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                 className="group bg-white border border-gray-200 hover:border-black transition-all rounded overflow-hidden"
               >
                 <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                  <img
-                    src={asset.thumbnail}
+                  <CldImage
+                    width="300"
+                    height="300"
+                    src={asset.publicId}
                     alt={`${garmentName} ${asset.model}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -87,7 +93,10 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                   </div>
                 </div>
                 <div className="px-3 py-2">
-                  <Typography variant="caption" className="text-gray-500 capitalize">
+                  <Typography
+                    variant="caption"
+                    className="text-gray-500 capitalize"
+                  >
                     {new Date(asset.date).toLocaleDateString()}
                   </Typography>
                 </div>

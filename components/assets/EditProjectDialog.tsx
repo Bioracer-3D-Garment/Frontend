@@ -1,9 +1,10 @@
 import { Dialog } from "@mui/material";
+import { CldImage } from "next-cloudinary";
 
 interface EditProjectDialogProps {
   open: boolean;
   projectName: string;
-  projectImageUrl: string;
+  projectImageTag: string;
   onProjectNameChange: (value: string) => void;
   onImageUrlChange: (url: string) => void;
   onClose: () => void;
@@ -17,7 +18,7 @@ interface EditProjectDialogProps {
 export function EditProjectDialog({
   open,
   projectName,
-  projectImageUrl,
+  projectImageTag,
   onProjectNameChange,
   onImageUrlChange,
   onClose,
@@ -43,22 +44,24 @@ export function EditProjectDialog({
         />
 
         <label className="block text-sm font-medium text-gray-700 mt-6">
-          Cover Image URL
+          Cover Image Tag
         </label>
         <input
           type="url"
-          value={projectImageUrl}
+          value={projectImageTag}
           onChange={(e) => onImageUrlChange(e.target.value)}
-          placeholder="https://example.com/image.jpg"
+          placeholder="Example_Tag"
           className="mt-2 w-full rounded-md border-2 border-gray-300 px-4 py-3 text-base focus:outline-none focus:border-[#e2001a]"
         />
 
         <div className="mt-4">
           <p className="text-sm text-gray-500">Preview:</p>
           <div className="mt-2 bg-gray-50 border border-gray-200 rounded-md overflow-hidden">
-            {projectImageUrl ? (
-              <img
-                src={projectImageUrl}
+            {projectImageTag ? (
+              <CldImage
+                width="300"
+                height="300"
+                src={projectImageTag}
                 alt="Cover preview"
                 className="w-full h-56 object-cover"
               />

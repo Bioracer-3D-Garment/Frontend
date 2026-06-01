@@ -1,4 +1,4 @@
-export type GarmentCategory = 'top' | 'bottom';
+export type GarmentCategory = "top" | "bottom";
 
 export interface ClothingItem {
   id: number;
@@ -21,10 +21,11 @@ export interface GeneratedAsset {
   jobId: string;
   productId: string;
   poseId: string;
-  category: 'upper_body' | 'lower_body';
+  category: "upper_body" | "lower_body";
   secureUrl: string;
   thumbnailUrl: string;
   createdAt: string;
+  publicId: string;
 }
 
 export interface ProjectAssetsPage {
@@ -37,7 +38,7 @@ export interface ProjectAssetsPage {
 
 export interface BatchStatus {
   jobId: string;
-  status: 'PENDING' | 'RUNNING' | 'DONE' | 'PARTIAL' | 'FAILED';
+  status: "PENDING" | "RUNNING" | "DONE" | "PARTIAL" | "FAILED";
   completed: number;
   total: number;
   uploadedCount: number;
@@ -45,18 +46,26 @@ export interface BatchStatus {
   assets: GeneratedAsset[] | null;
 }
 
+export interface ModelPhotos {
+  front: string;
+  back: string;
+  side: string;
+}
+
 export interface Model {
   id: number;
   name: string;
   profilePicture: string;
-  gender: 'male' | 'female';
+  gender: "male" | "female";
   selected: boolean;
+  photos?: ModelPhotos;
+  isCustom?: boolean;
 }
 
 export interface Asset {
   id: number;
   name: string;
-  type: 'image' | 'video';
+  type: "image" | "video";
   size: string;
   date: string;
   clothing: string;
@@ -64,6 +73,7 @@ export interface Asset {
   thumbnail: string;
   secureUrl: string;
   projectId: number;
+  publicId: string;
 }
 
 export interface ProjectUser {
@@ -83,7 +93,7 @@ export interface Project {
 export interface GeneratorStatus {
   open: boolean;
   message: string;
-  severity: 'success' | 'info' | 'warning' | 'error';
+  severity: "success" | "info" | "warning" | "error";
 }
 
 export interface EditProjectDialogState {
@@ -98,21 +108,23 @@ export interface User {
 
 export interface StatusMessage {
   message: string;
-  type: 'success' | 'error';
+  type: "success" | "error";
 }
 
-export type UserLoginResult = { ok: true; message?: string } | { ok: false; message: string };
+export type UserLoginResult =
+  | { ok: true; message?: string }
+  | { ok: false; message: string };
 
 export interface GarmentError {
   garment: string;
-  found:   string[];
+  found: string[];
   missing: string[];
 }
 
 export interface ZipValidationError {
-  status:        number;
-  error:         string;
-  message:       string;
+  status: number;
+  error: string;
+  message: string;
   garmentErrors: GarmentError[];
 }
 
