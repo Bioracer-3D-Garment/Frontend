@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Typography } from "@mui/material";
 import { Check } from "@mui/icons-material";
 import type { Model } from "@/types/types";
@@ -9,6 +10,13 @@ interface ModelCardProps {
 }
 
 export default function ModelCard({ model, onToggle }: ModelCardProps) {
+  const [imageError, setImageError] = useState(false);
+
+  const imageSource =
+    imageError && model.photos?.front
+      ? model.photos.front
+      : model.profilePicture;
+
   return (
     <button
       type="button"

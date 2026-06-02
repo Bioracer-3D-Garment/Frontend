@@ -224,7 +224,8 @@ export function ModelManagementModal({
 
     setUploadingSlots((prev) => new Set(prev).add(slot));
     try {
-      const secureUrl = await uploadImage(file);
+      const pose = slot === "profilePhoto" ? "coverImage" : slot;
+      const secureUrl = await uploadImage(file, pose, editingId ?? undefined);
       if (slot === "profilePhoto") {
         setForm((f) => ({ ...f, profilePhoto: secureUrl }));
       } else {
