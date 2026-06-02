@@ -87,12 +87,9 @@ export interface GeneratorStatus {
   severity: 'success' | 'info' | 'warning' | 'error';
 }
 
-export interface GenerationOptions {
-  resolution:  '1k' | '2k' | '4k' ;
-  frameFormat: 'square' | 'landscape' | 'portrait';
-  frameOutputFormat: 'png' | 'jpeg';
-  prompt?: string;
-}
+export type Resolution = '1k' | '2k' | '4k';
+export type FrameFormat = 'portrait' | 'square' | 'landscape';
+export type FrameOutputFormat = 'png' | 'jpeg';
 
 export interface EditProjectDialogState {
   open: boolean;

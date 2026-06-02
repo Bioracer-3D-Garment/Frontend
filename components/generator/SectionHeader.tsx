@@ -15,7 +15,7 @@ export function SectionHeader({ step, title, subtitle }: SectionHeaderProps) {
           {title}
         </Typography>
       </div>
-      <Typography variant="caption" className="text-gray-500 tracking-[0.1em] uppercase">
+      <Typography variant="caption" className="text-gray-500 tracking-widest uppercase">
         {subtitle}
       </Typography>
     </div>

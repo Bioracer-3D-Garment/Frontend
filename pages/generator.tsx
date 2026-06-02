@@ -12,8 +12,8 @@ import { useClothing } from '@/hooks/generator/useClothing';
 import { useProjects } from '@/hooks/generator/useFolders';
 import { useModels } from '@/hooks/generator/useModels';
 import { useGeneration } from '@/hooks/generator/useGeneration';
-import type { GenerationOptions } from '@/types/types';
 import { useState } from 'react';
+import type { Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
 
 export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
@@ -27,7 +27,12 @@ export default function GeneratorPage() {
 		selectedProjectId,
 	});
 
-	const [generationOptions, setGenerationOptions] = useState<GenerationOptions>({
+	const [generationOptions, setGenerationOptions] = useState<{
+		resolution: Resolution;
+		frameFormat: FrameFormat;
+		frameOutputFormat: FrameOutputFormat;
+		prompt?: string;
+	}>({
 		resolution: '2k',
 		frameFormat: 'portrait',
 		frameOutputFormat: 'png',
@@ -80,7 +85,10 @@ export default function GeneratorPage() {
 					onToggleModel={selectModel}
 				/>
 
-				<AdvancedSection options={generationOptions} onChange={setGenerationOptions} />
+				<AdvancedSection
+					values={generationOptions}
+					onChange={(patch) => setGenerationOptions((prev) => ({ ...prev, ...patch }))}
+				/>
 
 				<GenerateSection
 					clothingCount={zipFile ? 1 : 0}
@@ -102,7 +110,7 @@ export default function GeneratorPage() {
 						</div>
 						<div className="flex gap-3 overflow-x-auto pb-2">
 							{generation.generatedAssets.map((asset) => (
-								<div key={asset.id} className="flex-shrink-0 w-32 rounded overflow-hidden bg-gray-100 border border-gray-200">
+								<div key={asset.id} className="shrink-0 w-32 rounded overflow-hidden bg-gray-100 border border-gray-200">
 									<img
 										src={asset.thumbnailUrl}
 										alt={`${asset.productId} · ${asset.poseId}`}

@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import AdvancedSettings from './AdvancedSettings';
-import type { GenerationOptions } from '@/types/types';
+import type { Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
 import { IconButton } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 
 interface AdvancedSectionProps {
-  options: GenerationOptions;
-  onChange: (opts: GenerationOptions) => void;
+  values: {
+    resolution: Resolution;
+    frameFormat: FrameFormat;
+    frameOutputFormat: FrameOutputFormat;
+    prompt?: string;
+  };
+  onChange: (patch: Partial<{ resolution: Resolution; frameFormat: FrameFormat; frameOutputFormat: FrameOutputFormat; prompt?: string }>) => void;
 }
 
-export function AdvancedSection({ options, onChange }: AdvancedSectionProps) {
+export function AdvancedSection({ values, onChange }: AdvancedSectionProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -27,15 +32,7 @@ export function AdvancedSection({ options, onChange }: AdvancedSectionProps) {
 
       {open && (
         <div className="px-6 py-6">
-          <AdvancedSettings
-            values={{
-              resolution: options.resolution,
-              frameFormat: options.frameFormat,
-              frameOutputFormat: options.frameOutputFormat,
-              prompt: options.prompt,
-            }}
-            onChange={(patch) => onChange({ ...options, ...patch })}
-          />
+          <AdvancedSettings values={values} onChange={(patch) => onChange(patch)} />
         </div>
       )}
     </section>
