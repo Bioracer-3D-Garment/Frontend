@@ -48,18 +48,12 @@ export function useModels() {
     setModels((current) => {
       const target = current.find((m) => m.id === id);
       if (!target) return current;
-
       const selectedModels = current.filter((m) => m.selected);
       const activeGender = selectedModels[0]?.gender;
-
-      // Block if opposite gender is already selected
       if (!target.selected && activeGender && target.gender !== activeGender) {
         return current;
       }
-
-      return current.map((model) =>
-        model.id === id ? { ...model, selected: !model.selected } : model
-      );
+      return current.map((m) => (m.id === id ? { ...m, selected: !m.selected } : m));
     });
   };
 

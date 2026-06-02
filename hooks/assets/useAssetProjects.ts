@@ -22,6 +22,7 @@ export function useAssetProjects(
   const [editCoverImageTag, seteditCoverImageTag] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [projectService] = useState(() => injectedProjectService);
 
@@ -63,6 +64,32 @@ export function useAssetProjects(
     }
   };
 
+const handleDelete = async () => {
+  if (!editProject) return;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete "${editProject.name}"?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setIsDeleting(true);
+
+    await projectService.deleteProject(editProject.id);
+
+    closeEditDialog();
+
+    window.location.reload();
+
+  } catch (err) {
+    console.error(err);
+    setSaveError("Failed to delete project.");
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
   return {
     selectedProjectId,
     setSelectedProjectId,
@@ -79,6 +106,8 @@ export function useAssetProjects(
       onSave,
       isSaving,
       saveError,
+      handleDelete,
+      isDeleting,
     },
   };
 }
