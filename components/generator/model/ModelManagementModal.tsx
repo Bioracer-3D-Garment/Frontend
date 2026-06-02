@@ -58,6 +58,8 @@ function UploadZone({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleFile = (file: File) => onFileSelected(file);
 

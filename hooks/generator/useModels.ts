@@ -1,28 +1,48 @@
-import { useState, useEffect } from 'react';
-import type { Model } from '@/types/types';
-import modelService from '@/service/model/modelService';
+import { useCallback, useEffect, useState } from 'react';
+import type { Model, ModelFormValues } from '@/types/types';
+import ModelService, { type ModelSaveInput } from '@/service/model/modelService';
+
+const modelService = new ModelService();
+
+function toSaveInput(values: ModelFormValues): ModelSaveInput {
+  return {
+    name: values.name,
+    gender: values.gender,
+    coverImage: values.profilePicture,
+    front: values.photos.front,
+    back: values.photos.back,
+    side: values.photos.side,
+  };
+}
 
 export function useModels() {
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchModels = async (preserveSelected?: number[]) => {
-    try {
-      const fresh = await modelService.getModels();
-      setModels(
-        preserveSelected
-          ? fresh.map((m) => ({ ...m, selected: preserveSelected.includes(m.id) }))
-          : fresh,
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load models');
-    }
-  };
+  // Promise-chain style (not async/await) so state updates only happen inside the
+  // async callbacks — avoids the react-hooks/set-state-in-effect lint rule when called
+  // from the mount effect below (mirrors the usePoses hook).
+  const loadModels = useCallback(() => {
+    return modelService
+      .getModels()
+      .then((fetched) => {
+        // Preserve any client-side selection across reloads.
+        setModels((current) => {
+          const selectedIds = new Set(current.filter((m) => m.selected).map((m) => m.id));
+          return fetched.map((m) => ({ ...m, selected: selectedIds.has(m.id) }));
+        });
+        setError(null);
+      })
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : 'Failed to load models');
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
-    fetchModels().finally(() => setLoading(false));
-  }, []);
+    loadModels();
+  }, [loadModels]);
 
   const toggleModel = (id: number) => {
     setModels((current) => {
@@ -37,35 +57,21 @@ export function useModels() {
     });
   };
 
-  const addModel = async (model: Omit<Model, 'id' | 'selected'>) => {
-    await modelService.createModel(model);
-    const selectedIds = models.filter((m) => m.selected).map((m) => m.id);
-    await fetchModels(selectedIds);
+  const addModel = async (values: ModelFormValues) => {
+    const created = await modelService.createModel(toSaveInput(values));
+    setModels((current) => [...current, created]);
   };
 
-  const updateModel = async (id: number, updates: Partial<Omit<Model, 'id'>>) => {
-    const current = models.find((m) => m.id === id);
-    if (!current) return;
-    const merged: Omit<Model, 'id' | 'selected'> = { ...current, ...updates };
-    setModels((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)));
-    try {
-      await modelService.updateModel(id, merged);
-    } catch (err) {
-      const selectedIds = models.filter((m) => m.selected).map((m) => m.id);
-      await fetchModels(selectedIds);
-      throw err;
-    }
+  const updateModel = async (id: number, values: ModelFormValues) => {
+    const updated = await modelService.updateModel(id, toSaveInput(values));
+    setModels((current) =>
+      current.map((model) => (model.id === id ? { ...updated, selected: model.selected } : model))
+    );
   };
 
   const deleteModel = async (id: number) => {
-    const snapshot = models;
-    setModels((prev) => prev.filter((m) => m.id !== id));
-    try {
-      await modelService.deleteModel(id);
-    } catch (err) {
-      setModels(snapshot);
-      throw err;
-    }
+    await modelService.deleteModel(id);
+    setModels((current) => current.filter((model) => model.id !== id));
   };
 
   const selectedModels = models.filter((m) => m.selected);
@@ -77,6 +83,7 @@ export function useModels() {
     error,
     selectedModels,
     selectedGender,
+    reloadModels: loadModels,
     toggleModel,
     addModel,
     updateModel,

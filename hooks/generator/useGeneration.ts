@@ -7,13 +7,14 @@ const batchService = new BatchService();
 const POLL_INTERVAL_MS = 3000;
 
 interface UseGenerationParams {
-	zipFile: File | null;
-	selectedGender: string | null;
+	frontDesign: File | null;
+	backDesign: File | null;
+	selectedModelId: number | null;
 	selectedProjectName: string;
 	selectedProjectId: number | null;
 }
 
-export function useGeneration({ zipFile, selectedGender, selectedProjectName, selectedProjectId }: UseGenerationParams) {
+export function useGeneration({ frontDesign, backDesign, selectedModelId, selectedProjectName, selectedProjectId }: UseGenerationParams) {
 	const router = useRouter();
 	const [generating, setGenerating] = useState(false);
 	const [progress, setProgress] = useState({ completed: 0, total: 0 });
@@ -21,7 +22,7 @@ export function useGeneration({ zipFile, selectedGender, selectedProjectName, se
 	const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[] | null>(null);
 	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-	const canGenerate = zipFile !== null && selectedGender !== null && selectedProjectId !== null;
+	const canGenerate = frontDesign !== null && backDesign !== null && selectedModelId !== null && selectedProjectId !== null;
 
 	const stopPolling = () => {
 		if (pollRef.current) {
@@ -39,8 +40,9 @@ export function useGeneration({ zipFile, selectedGender, selectedProjectName, se
 		let jobId: string;
 		try {
 			const result = await batchService.startBatch({
-				garmentZip: zipFile!,
-				gender: selectedGender!,
+				frontDesign: frontDesign!,
+				backDesign: backDesign!,
+				modelId: selectedModelId!,
 				folderId: selectedProjectId!,
 			});
 			jobId = result.jobId;
@@ -54,7 +56,7 @@ export function useGeneration({ zipFile, selectedGender, selectedProjectName, se
 			return;
 		}
 
-		setStatus({ open: true, message: `Generating "${zipFile!.name}" with ${selectedGender} model…`, severity: 'info' });
+		setStatus({ open: true, message: 'Generating garment assets…', severity: 'info' });
 
 		pollRef.current = setInterval(async () => {
 			try {

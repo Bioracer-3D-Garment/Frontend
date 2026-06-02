@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import type { Model } from '@/types/types';
+import type { Model, ModelFormValues } from '@/types/types';
 import { SectionHeader } from '../SectionHeader';
 import ModelCard from './ModelCard';
 import { ModelManagementModal } from './ModelManagementModal';
