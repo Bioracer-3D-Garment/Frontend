@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,29 +11,37 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   CircularProgress,
-} from '@mui/material';
-import { Add, Edit, Delete, ArrowBack, CloudUpload, Check } from '@mui/icons-material';
-import type { Model, ModelPhotos } from '@/types/types';
-import { uploadImage } from '@/service/cloudinary/uploadImage';
+} from "@mui/material";
+import {
+  Add,
+  Edit,
+  Delete,
+  ArrowBack,
+  CloudUpload,
+  Check,
+} from "@mui/icons-material";
+import type { Model, ModelPhotos } from "@/types/types";
+import { uploadImage } from "@/service/cloudinary/uploadImage";
+import { CldImage } from "next-cloudinary";
 
 interface ModelManagementModalProps {
   open: boolean;
   models: Model[];
   onClose: () => void;
   onToggle: (id: number) => void;
-  onAdd: (model: Omit<Model, 'id' | 'selected'>) => Promise<void>;
-  onUpdate: (id: number, updates: Partial<Omit<Model, 'id'>>) => Promise<void>;
+  onAdd: (model: Omit<Model, "id" | "selected">) => Promise<void>;
+  onUpdate: (id: number, updates: Partial<Omit<Model, "id">>) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
 }
 
 interface FormState {
   name: string;
-  gender: 'male' | 'female';
+  gender: "male" | "female";
   profilePhoto: string | null;
   photos: { front: string | null; back: string | null; side: string | null };
 }
 
-type PhotoSlot = 'profilePhoto' | 'front' | 'back' | 'side';
+type PhotoSlot = "profilePhoto" | "front" | "back" | "side";
 
 function UploadZone({
   label,
@@ -56,40 +64,62 @@ function UploadZone({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline gap-1">
-        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          {label}
+        </span>
         {optional && <span className="text-[10px] text-gray-400">(opt.)</span>}
       </div>
       <div
         onClick={() => !uploading && inputRef.current?.click()}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f && !uploading) handleFile(f); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          const f = e.dataTransfer.files[0];
+          if (f && !uploading) handleFile(f);
+        }}
         onDragOver={(e) => e.preventDefault()}
         onDragEnter={() => setDragging(true)}
         onDragLeave={() => setDragging(false)}
         className={`relative flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-all duration-150 ${
           uploading
-            ? 'cursor-wait border-gray-200 bg-gray-50'
+            ? "cursor-wait border-gray-200 bg-gray-50"
             : dragging
-            ? 'scale-[1.02] cursor-pointer border-[#e2001a] bg-red-50 shadow-[0_0_0_4px_rgba(226,0,26,0.08)]'
-            : preview
-            ? 'cursor-pointer border-[#e2001a]/40 bg-red-50/40 hover:border-[#e2001a]/70 hover:bg-red-50/70'
-            : 'cursor-pointer border-gray-200 bg-gray-50 hover:border-[#e2001a]/50 hover:bg-red-50/30'
+              ? "scale-[1.02] cursor-pointer border-[#e2001a] bg-red-50 shadow-[0_0_0_4px_rgba(226,0,26,0.08)]"
+              : preview
+                ? "cursor-pointer border-[#e2001a]/40 bg-red-50/40 hover:border-[#e2001a]/70 hover:bg-red-50/70"
+                : "cursor-pointer border-gray-200 bg-gray-50 hover:border-[#e2001a]/50 hover:bg-red-50/30"
         }`}
       >
         {uploading ? (
-          <CircularProgress size={20} sx={{ color: '#e2001a' }} />
+          <CircularProgress size={20} sx={{ color: "#e2001a" }} />
         ) : preview ? (
           <>
-            <img src={preview} alt={label} className="h-full w-full rounded-xl object-cover" />
-            <div className={`absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl bg-black/40 transition-opacity ${dragging ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}>
+            <CldImage
+              width={400}
+              height={400}
+              src={preview}
+              alt={label}
+              className="h-full w-full rounded-xl object-cover"
+            />
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl bg-black/40 transition-opacity ${dragging ? "opacity-100" : "opacity-0 hover:opacity-100"}`}
+            >
               <CloudUpload className="text-white" fontSize="small" />
-              <span className="text-xs font-semibold text-white">{dragging ? 'Drop to replace' : 'Replace'}</span>
+              <span className="text-xs font-semibold text-white">
+                {dragging ? "Drop to replace" : "Replace"}
+              </span>
             </div>
           </>
         ) : (
           <>
-            <CloudUpload className={`transition-colors ${dragging ? 'text-[#e2001a]' : 'text-gray-300'}`} fontSize="small" />
-            <span className={`text-center text-xs leading-tight transition-colors ${dragging ? 'font-semibold text-[#e2001a]' : 'text-gray-400'}`}>
-              {dragging ? 'Drop to upload' : 'Click or drag'}
+            <CloudUpload
+              className={`transition-colors ${dragging ? "text-[#e2001a]" : "text-gray-300"}`}
+              fontSize="small"
+            />
+            <span
+              className={`text-center text-xs leading-tight transition-colors ${dragging ? "font-semibold text-[#e2001a]" : "text-gray-400"}`}
+            >
+              {dragging ? "Drop to upload" : "Click or drag"}
             </span>
           </>
         )}
@@ -98,7 +128,10 @@ function UploadZone({
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+          }}
         />
       </div>
     </div>
@@ -106,8 +139,8 @@ function UploadZone({
 }
 
 const emptyForm: FormState = {
-  name: '',
-  gender: 'female',
+  name: "",
+  gender: "female",
   profilePhoto: null,
   photos: { front: null, back: null, side: null },
 };
@@ -121,13 +154,15 @@ export function ModelManagementModal({
   onUpdate,
   onDelete,
 }: ModelManagementModalProps) {
-  const [view, setView] = useState<'list' | 'form'>('list');
+  const [view, setView] = useState<"list" | "form">("list");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [uploadingSlots, setUploadingSlots] = useState<Set<PhotoSlot>>(new Set());
+  const [uploadingSlots, setUploadingSlots] = useState<Set<PhotoSlot>>(
+    new Set(),
+  );
 
   const selectedModels = models.filter((m) => m.selected);
   const activeGender = selectedModels[0]?.gender ?? null;
@@ -141,7 +176,7 @@ export function ModelManagementModal({
     setForm(emptyForm);
     setSubmitAttempted(false);
     setSaveError(null);
-    setView('form');
+    setView("form");
   };
 
   const openEdit = (model: Model) => {
@@ -149,7 +184,10 @@ export function ModelManagementModal({
     setForm({
       name: model.name,
       gender: model.gender,
-      profilePhoto: model.profilePicture !== model.photos?.front ? model.profilePicture : null,
+      profilePhoto:
+        model.profilePicture !== model.photos?.front
+          ? model.profilePicture
+          : null,
       photos: {
         front: model.photos?.front ?? null,
         back: model.photos?.back ?? null,
@@ -158,11 +196,11 @@ export function ModelManagementModal({
     });
     setSubmitAttempted(false);
     setSaveError(null);
-    setView('form');
+    setView("form");
   };
 
   const handleBack = () => {
-    setView('list');
+    setView("list");
     setEditingId(null);
     setForm(emptyForm);
     setSubmitAttempted(false);
@@ -178,7 +216,7 @@ export function ModelManagementModal({
   const handlePhotoFile = (slot: PhotoSlot) => async (file: File) => {
     // Show a local blob preview immediately while uploading
     const blobUrl = URL.createObjectURL(file);
-    if (slot === 'profilePhoto') {
+    if (slot === "profilePhoto") {
       setForm((f) => ({ ...f, profilePhoto: blobUrl }));
     } else {
       setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: blobUrl } }));
@@ -187,14 +225,14 @@ export function ModelManagementModal({
     setUploadingSlots((prev) => new Set(prev).add(slot));
     try {
       const secureUrl = await uploadImage(file);
-      if (slot === 'profilePhoto') {
+      if (slot === "profilePhoto") {
         setForm((f) => ({ ...f, profilePhoto: secureUrl }));
       } else {
         setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: secureUrl } }));
       }
     } catch {
       // Upload failed — clear the slot so the user can retry
-      if (slot === 'profilePhoto') {
+      if (slot === "profilePhoto") {
         setForm((f) => ({ ...f, profilePhoto: null }));
       } else {
         setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: null } }));
@@ -209,7 +247,10 @@ export function ModelManagementModal({
   };
 
   const isFormValid =
-    form.name.trim() && form.photos.front && form.photos.back && form.photos.side;
+    form.name.trim() &&
+    form.photos.front &&
+    form.photos.back &&
+    form.photos.side;
 
   const showNameError = submitAttempted && !form.name.trim();
 
@@ -226,13 +267,24 @@ export function ModelManagementModal({
       };
       const profilePicture = form.profilePhoto ?? photos.front;
       if (editingId !== null) {
-        await onUpdate(editingId, { name: form.name.trim(), gender: form.gender, profilePicture, photos });
+        await onUpdate(editingId, {
+          name: form.name.trim(),
+          gender: form.gender,
+          profilePicture,
+          photos,
+        });
       } else {
-        await onAdd({ name: form.name.trim(), gender: form.gender, profilePicture, photos, isCustom: true });
+        await onAdd({
+          name: form.name.trim(),
+          gender: form.gender,
+          profilePicture,
+          photos,
+          isCustom: true,
+        });
       }
       handleBack();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Something went wrong');
+      setSaveError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -241,19 +293,30 @@ export function ModelManagementModal({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle className="flex items-center gap-2 font-bold">
-        {view === 'form' && (
-          <IconButton size="small" onClick={handleBack} disabled={saving} className="!mr-1">
+        {view === "form" && (
+          <IconButton
+            size="small"
+            onClick={handleBack}
+            disabled={saving}
+            className="!mr-1"
+          >
             <ArrowBack fontSize="small" />
           </IconButton>
         )}
-        {view === 'list' ? 'Models' : editingId !== null ? 'Edit model' : 'Add model'}
+        {view === "list"
+          ? "Models"
+          : editingId !== null
+            ? "Edit model"
+            : "Add model"}
       </DialogTitle>
 
       <DialogContent className="!pt-2">
-        {view === 'list' ? (
+        {view === "list" ? (
           <div className="flex flex-col gap-2">
             {models.length === 0 && (
-              <p className="py-6 text-center text-sm text-gray-400">No models yet. Add one below.</p>
+              <p className="py-6 text-center text-sm text-gray-400">
+                No models yet. Add one below.
+              </p>
             )}
             {models.map((model) => {
               const disabled = isDisabled(model);
@@ -263,22 +326,34 @@ export function ModelManagementModal({
                   onClick={() => !disabled && onToggle(model.id)}
                   className={`flex items-center gap-3 rounded-xl border p-3 transition-all ${
                     disabled
-                      ? 'cursor-not-allowed border-gray-100 bg-gray-50/30 opacity-40'
+                      ? "cursor-not-allowed border-gray-100 bg-gray-50/30 opacity-40"
                       : model.selected
-                      ? 'cursor-pointer border-[#e2001a] bg-red-50/40 ring-1 ring-[#e2001a]/20'
-                      : 'cursor-pointer border-gray-100 bg-gray-50/50 hover:border-gray-200 hover:bg-gray-100/50'
+                        ? "cursor-pointer border-[#e2001a] bg-red-50/40 ring-1 ring-[#e2001a]/20"
+                        : "cursor-pointer border-gray-100 bg-gray-50/50 hover:border-gray-200 hover:bg-gray-100/50"
                   }`}
                 >
-                  <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${model.selected ? 'border-[#e2001a] bg-[#e2001a]' : 'border-gray-300 bg-white'}`}>
-                    {model.selected && <Check sx={{ fontSize: 12 }} className="text-white" />}
+                  <div
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${model.selected ? "border-[#e2001a] bg-[#e2001a]" : "border-gray-300 bg-white"}`}
+                  >
+                    {model.selected && (
+                      <Check sx={{ fontSize: 12 }} className="text-white" />
+                    )}
                   </div>
 
                   <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-200 ring-1 ring-black/5">
-                    <img src={model.profilePicture} alt={model.name} className="h-full w-full object-cover" />
+                    <CldImage
+                      width={200}
+                      height={200}
+                      src={model.profilePicture}
+                      alt={model.name}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-gray-900">{model.name}</p>
+                    <p className="truncate text-sm font-semibold text-gray-900">
+                      {model.name}
+                    </p>
                     <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold capitalize text-red-600">
                       {model.gender}
                     </span>
@@ -287,7 +362,10 @@ export function ModelManagementModal({
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); openEdit(model); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEdit(model);
+                      }}
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
                       title="Edit"
                     >
@@ -295,7 +373,10 @@ export function ModelManagementModal({
                     </button>
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); onDelete(model.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(model.id);
+                      }}
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-400 transition-colors hover:bg-red-50 hover:text-[#e2001a]"
                       title="Delete"
                     >
@@ -326,10 +407,14 @@ export function ModelManagementModal({
                 autoFocus
                 type="text"
                 value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
                 placeholder="Model name"
                 className={`w-full rounded-xl border-2 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:bg-white focus:border-[#e2001a] ${
-                  showNameError ? 'border-[#e2001a]' : 'border-gray-200 hover:border-gray-300'
+                  showNameError
+                    ? "border-[#e2001a]"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
               />
               {showNameError && (
@@ -339,22 +424,26 @@ export function ModelManagementModal({
 
             {/* Gender */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Gender</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Gender
+              </span>
               <ToggleButtonGroup
                 value={form.gender}
                 exclusive
-                onChange={(_, val) => val && setForm((f) => ({ ...f, gender: val }))}
+                onChange={(_, val) =>
+                  val && setForm((f) => ({ ...f, gender: val }))
+                }
                 size="small"
               >
                 <ToggleButton
                   value="female"
-                  className={`!px-6 !text-sm !font-semibold ${form.gender === 'female' ? '!bg-[#e2001a] !text-white' : ''}`}
+                  className={`!px-6 !text-sm !font-semibold ${form.gender === "female" ? "!bg-[#e2001a] !text-white" : ""}`}
                 >
                   Female
                 </ToggleButton>
                 <ToggleButton
                   value="male"
-                  className={`!px-6 !text-sm !font-semibold ${form.gender === 'male' ? '!bg-[#e2001a] !text-white' : ''}`}
+                  className={`!px-6 !text-sm !font-semibold ${form.gender === "male" ? "!bg-[#e2001a] !text-white" : ""}`}
                 >
                   Male
                 </ToggleButton>
@@ -363,16 +452,18 @@ export function ModelManagementModal({
 
             {/* Photos */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Photos</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Photos
+              </span>
               <div className="grid grid-cols-4 gap-3">
                 <UploadZone
                   label="Cover photo"
                   optional
                   preview={form.profilePhoto ?? form.photos.front}
-                  uploading={uploadingSlots.has('profilePhoto')}
-                  onFileSelected={handlePhotoFile('profilePhoto')}
+                  uploading={uploadingSlots.has("profilePhoto")}
+                  onFileSelected={handlePhotoFile("profilePhoto")}
                 />
-                {(['front', 'back', 'side'] as const).map((key) => (
+                {(["front", "back", "side"] as const).map((key) => (
                   <UploadZone
                     key={key}
                     label={key.charAt(0).toUpperCase() + key.slice(1)}
@@ -388,15 +479,21 @@ export function ModelManagementModal({
             </div>
 
             {saveError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[#e2001a]">{saveError}</p>
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[#e2001a]">
+                {saveError}
+              </p>
             )}
           </div>
         )}
       </DialogContent>
 
-      {view === 'form' ? (
+      {view === "form" ? (
         <DialogActions className="px-6 pb-6">
-          <Button onClick={handleBack} disabled={saving} className="!text-black">
+          <Button
+            onClick={handleBack}
+            disabled={saving}
+            className="!text-black"
+          >
             Cancel
           </Button>
           <Button
@@ -404,9 +501,13 @@ export function ModelManagementModal({
             variant="contained"
             disabled={!isFormValid || anyUploading || saving}
             className="!bg-[#e2001a] !text-white font-bold transition-all hover:!bg-[#b80015] hover:scale-105 disabled:!bg-gray-300 disabled:!text-gray-500"
-            startIcon={saving ? <CircularProgress size={14} sx={{ color: 'white' }} /> : undefined}
+            startIcon={
+              saving ? (
+                <CircularProgress size={14} sx={{ color: "white" }} />
+              ) : undefined
+            }
           >
-            {editingId !== null ? 'Save' : 'Add'}
+            {editingId !== null ? "Save" : "Add"}
           </Button>
         </DialogActions>
       ) : (
