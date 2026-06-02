@@ -1,17 +1,17 @@
-import { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/router';
-import { Typography, Button } from '@mui/material';
-import { Download, ArrowBack } from '@mui/icons-material';
-import { Navbar } from '@/components/Navbar';
-import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
-import { ProjectGrid } from '@/components/assets/ProjectGrid';
-import { AssetGrid } from '@/components/assets/AssetGrid';
-import { EditProjectDialog } from '@/components/assets/EditProjectDialog';
-import { useAssets } from '@/hooks/assets/useAssets';
-import { useAssetProjects } from '@/hooks/assets/useAssetProjects';
-import type { Project } from '@/types/types';
-import ProjectService from '@/service/project/projectService';
-import AssetService from '@/service/asset/assetService';
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/router";
+import { Typography, Button } from "@mui/material";
+import { Download, ArrowBack } from "@mui/icons-material";
+import { Navbar } from "@/components/Navbar";
+import { useAuthRedirects } from "@/components/auth/useAuthRedirects";
+import { ProjectGrid } from "@/components/assets/ProjectGrid";
+import { AssetGrid } from "@/components/assets/AssetGrid";
+import { EditProjectDialog } from "@/components/assets/EditProjectDialog";
+import { useAssets } from "@/hooks/assets/useAssets";
+import { useAssetProjects } from "@/hooks/assets/useAssetProjects";
+import type { Project } from "@/types/types";
+import ProjectService from "@/service/project/projectService";
+import AssetService from "@/service/asset/assetService";
 
 export default function AssetsPage() {
 	const router = useRouter();
@@ -173,6 +173,8 @@ export default function AssetsPage() {
 				onSave={editDialog.onSave}
 				isSaving={editDialog.isSaving}
 				saveError={editDialog.saveError}
+				onDelete={editDialog.handleDelete}
+				isDeleting={editDialog.isDeleting}
 			/>
 		</div>
 	);

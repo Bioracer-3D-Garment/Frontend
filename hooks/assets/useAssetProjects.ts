@@ -8,7 +8,9 @@ export function useAssetProjects(
   injectedProjectService: ProjectService = new ProjectService(),
   onProjectUpdated?: (project: Project) => void,
 ) {
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+    null,
+  );
 
   const [editDialog, setEditDialog] = useState<EditProjectDialogState>({
     open: false,
@@ -17,9 +19,10 @@ export function useAssetProjects(
 
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [editProjectName, setEditProjectName] = useState("");
-  const [editCoverImageUrl, setEditCoverImageUrl] = useState("");
+  const [editCoverImageTag, seteditCoverImageTag] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [projectService] = useState(() => injectedProjectService);
 
@@ -27,16 +30,16 @@ export function useAssetProjects(
     setEditDialog({ open: true, projectId: project.id });
     setEditProject(project);
     setEditProjectName(project.name);
-    setEditCoverImageUrl(project.coverImage ?? "");
+    seteditCoverImageTag(project.coverImage ?? "");
     setSaveError("");
   };
 
   const closeEditDialog = () => {
-    revokePreviewIfBlob(editCoverImageUrl);
+    revokePreviewIfBlob(editCoverImageTag);
     setEditDialog({ open: false, projectId: null });
     setEditProject(null);
     setEditProjectName("");
-    setEditCoverImageUrl("");
+    seteditCoverImageTag("");
     setSaveError("");
   };
 
@@ -49,7 +52,7 @@ export function useAssetProjects(
     try {
       const saved = await projectService.updateProjectDetails(
         editDialog.projectId!,
-        { name: editProjectName, coverImage: editCoverImageUrl },
+        { name: editProjectName, coverImage: editCoverImageTag },
       );
 
       if (onProjectUpdated) onProjectUpdated(saved);
@@ -61,6 +64,32 @@ export function useAssetProjects(
     }
   };
 
+const handleDelete = async () => {
+  if (!editProject) return;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete "${editProject.name}"?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setIsDeleting(true);
+
+    await projectService.deleteProject(editProject.id);
+
+    closeEditDialog();
+
+    window.location.reload();
+
+  } catch (err) {
+    console.error(err);
+    setSaveError("Failed to delete project.");
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
   return {
     selectedProjectId,
     setSelectedProjectId,
@@ -70,13 +99,15 @@ export function useAssetProjects(
     editDialog: {
       open: editDialog.open,
       projectName: editProjectName,
-      projectImageUrl: editCoverImageUrl,
+      projectImageTag: editCoverImageTag,
       onProjectNameChange: setEditProjectName,
-      onImageUrlChange: setEditCoverImageUrl,
+      onImageUrlChange: seteditCoverImageTag,
       onClose: closeEditDialog,
       onSave,
       isSaving,
       saveError,
+      handleDelete,
+      isDeleting,
     },
   };
 }
