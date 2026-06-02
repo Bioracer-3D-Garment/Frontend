@@ -1,5 +1,5 @@
 import { Typography } from '@mui/material';
-import { Check } from '@mui/icons-material';
+import { CldImage } from 'next-cloudinary';
 import type { Model } from '@/types/types';
 
 interface ModelCardProps {
@@ -26,7 +26,7 @@ export default function ModelCard({ model, onToggle }: ModelCardProps) {
       </div>
 
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-gray-100 ring-1 ring-black/5">
-        <img src={model.profilePicture} alt={model.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+        <CldImage width="200" height="200" src={model.profilePicture} alt={model.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent" />
       </div>
 

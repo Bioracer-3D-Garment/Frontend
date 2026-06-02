@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import type { Model } from '@/types/types';
+import type { Model, ModelFormValues } from '@/types/types';
 import { SectionHeader } from '../SectionHeader';
 import ModelCard from './ModelCard';
 import { ModelManagementModal } from './ModelManagementModal';
@@ -10,9 +10,9 @@ interface ModelSelectionSectionProps {
   selectedModels: Model[];
   subtitle: string;
   onToggleModel: (id: number) => void;
-  onAddModel: (model: Omit<Model, 'id' | 'selected'>) => void;
-  onUpdateModel: (id: number, updates: Partial<Omit<Model, 'id'>>) => void;
-  onDeleteModel: (id: number) => void;
+  onAddModel: (model: ModelFormValues) => Promise<void>;
+  onUpdateModel: (id: number, updates: ModelFormValues) => Promise<void>;
+  onDeleteModel: (id: number) => Promise<void> | void;
 }
 
 export function ModelSelectionSection({

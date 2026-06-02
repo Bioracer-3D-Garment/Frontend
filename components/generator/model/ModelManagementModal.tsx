@@ -10,23 +10,27 @@ import {
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
+  CircularProgress,
 } from '@mui/material';
-import { Add, Edit, Delete, ArrowBack, CloudUpload, Check } from '@mui/icons-material';
-import type { Model, ModelPhotos } from '@/types/types';
+import { Add, Edit, Delete, ArrowBack, CloudUpload, Check, ErrorOutline } from '@mui/icons-material';
+import { CldImage } from 'next-cloudinary';
+import type { Model, ModelPhotos, ModelFormValues } from '@/types/types';
+import { uploadImage } from '@/utils/cloudinary';
 
 interface ModelManagementModalProps {
   open: boolean;
   models: Model[];
   onClose: () => void;
   onToggle: (id: number) => void;
-  onAdd: (model: Omit<Model, 'id' | 'selected'>) => void;
-  onUpdate: (id: number, updates: Partial<Omit<Model, 'id'>>) => void;
-  onDelete: (id: number) => void;
+  onAdd: (model: ModelFormValues) => Promise<void>;
+  onUpdate: (id: number, updates: ModelFormValues) => Promise<void>;
+  onDelete: (id: number) => Promise<void> | void;
 }
 
 interface FormState {
   name: string;
   gender: 'male' | 'female';
+  // Image fields hold Cloudinary public IDs (uploaded via the backend on file pick).
   profilePhoto: string | null;
   photos: { front: string | null; back: string | null; side: string | null };
 }
@@ -36,16 +40,33 @@ function UploadZone({
   optional,
   preview,
   onChange,
+  onUploadingChange,
 }: {
   label: string;
   optional?: boolean;
   preview: string | null;
-  onChange: (url: string) => void;
+  onChange: (publicId: string) => void;
+  onUploadingChange: (uploading: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  const handleFile = (file: File) => onChange(URL.createObjectURL(file));
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    setFailed(false);
+    onUploadingChange(true);
+    try {
+      const result = await uploadImage(file);
+      onChange(result.publicId);
+    } catch {
+      setFailed(true);
+    } finally {
+      setUploading(false);
+      onUploadingChange(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -54,8 +75,8 @@ function UploadZone({
         {optional && <span className="text-[10px] text-gray-400">(opt.)</span>}
       </div>
       <div
-        onClick={() => inputRef.current?.click()}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+        onClick={() => !uploading && inputRef.current?.click()}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); if (uploading) return; const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
         onDragOver={(e) => e.preventDefault()}
         onDragEnter={() => setDragging(true)}
         onDragLeave={() => setDragging(false)}
@@ -67,9 +88,17 @@ function UploadZone({
             : 'border-gray-200 bg-gray-50 hover:border-[#e2001a]/50 hover:bg-red-50/30'
         }`}
       >
-        {preview ? (
+        {uploading ? (
+          <CircularProgress size={22} sx={{ color: '#e2001a' }} />
+        ) : preview ? (
           <>
-            <img src={preview} alt={label} className="h-full w-full rounded-xl object-cover" />
+            <CldImage
+              width="200"
+              height="200"
+              src={preview}
+              alt={label}
+              className="h-full w-full rounded-xl object-cover"
+            />
             <div className={`absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl bg-black/40 transition-opacity ${dragging ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}>
               <CloudUpload className="text-white" fontSize="small" />
               <span className="text-xs font-semibold text-white">{dragging ? 'Drop to replace' : 'Replace'}</span>
@@ -77,9 +106,13 @@ function UploadZone({
           </>
         ) : (
           <>
-            <CloudUpload className={`transition-colors ${dragging ? 'text-[#e2001a]' : 'text-gray-300'}`} fontSize="small" />
-            <span className={`text-center text-xs leading-tight transition-colors ${dragging ? 'font-semibold text-[#e2001a]' : 'text-gray-400'}`}>
-              {dragging ? 'Drop to upload' : 'Click or drag'}
+            {failed ? (
+              <ErrorOutline className="text-[#e2001a]" fontSize="small" />
+            ) : (
+              <CloudUpload className={`transition-colors ${dragging ? 'text-[#e2001a]' : 'text-gray-300'}`} fontSize="small" />
+            )}
+            <span className={`text-center text-xs leading-tight transition-colors ${failed ? 'font-semibold text-[#e2001a]' : dragging ? 'font-semibold text-[#e2001a]' : 'text-gray-400'}`}>
+              {failed ? 'Upload failed — retry' : dragging ? 'Drop to upload' : 'Click or drag'}
             </span>
           </>
         )}
@@ -109,6 +142,12 @@ export function ModelManagementModal({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const onUploadingChange = (uploading: boolean) =>
+    setUploadingCount((count) => Math.max(0, count + (uploading ? 1 : -1)));
 
   const selectedModels = models.filter((m) => m.selected);
   const activeGender = selectedModels[0]?.gender ?? null;
@@ -119,6 +158,7 @@ export function ModelManagementModal({
     setEditingId(null);
     setForm(emptyForm);
     setSubmitAttempted(false);
+    setSaveError(null);
     setView('form');
   };
 
@@ -135,6 +175,7 @@ export function ModelManagementModal({
       },
     });
     setSubmitAttempted(false);
+    setSaveError(null);
     setView('form');
   };
 
@@ -143,6 +184,7 @@ export function ModelManagementModal({
     setEditingId(null);
     setForm(emptyForm);
     setSubmitAttempted(false);
+    setSaveError(null);
   };
 
   const handleClose = () => {
@@ -151,25 +193,36 @@ export function ModelManagementModal({
   };
 
   const isFormValid =
-    form.name.trim() && form.photos.front && form.photos.back && form.photos.side;
+    !!form.name.trim() && !!form.photos.front && !!form.photos.back && !!form.photos.side;
+  const isUploading = uploadingCount > 0;
 
   const showNameError = submitAttempted && !form.name.trim();
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSubmitAttempted(true);
-    if (!isFormValid) return;
+    if (!isFormValid || isUploading || saving) return;
     const photos: ModelPhotos = {
       front: form.photos.front!,
       back: form.photos.back!,
       side: form.photos.side!,
     };
     const profilePicture = form.profilePhoto ?? photos.front;
-    if (editingId !== null) {
-      onUpdate(editingId, { name: form.name.trim(), gender: form.gender, profilePicture, photos });
-    } else {
-      onAdd({ name: form.name.trim(), gender: form.gender, profilePicture, photos, isCustom: true });
+    const values: ModelFormValues = { name: form.name.trim(), gender: form.gender, profilePicture, photos };
+
+    setSaving(true);
+    setSaveError(null);
+    try {
+      if (editingId !== null) {
+        await onUpdate(editingId, values);
+      } else {
+        await onAdd(values);
+      }
+      handleBack();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save model. Please try again.');
+    } finally {
+      setSaving(false);
     }
-    handleBack();
   };
 
   return (
@@ -208,7 +261,7 @@ export function ModelManagementModal({
                   </div>
 
                   <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-200 ring-1 ring-black/5">
-                    <img src={model.profilePicture} alt={model.name} className="h-full w-full object-cover" />
+                    <CldImage width="80" height="80" src={model.profilePicture} alt={model.name} className="h-full w-full object-cover" />
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -261,7 +314,6 @@ export function ModelManagementModal({
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                
                 placeholder="Model name"
                 className={`w-full rounded-xl border-2 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:bg-white focus:border-[#e2001a] ${
                   showNameError ? 'border-[#e2001a]' : 'border-gray-200 hover:border-gray-300'
@@ -304,34 +356,43 @@ export function ModelManagementModal({
                   label="Cover photo"
                   optional
                   preview={form.profilePhoto ?? form.photos.front}
-                  onChange={(url) => setForm((f) => ({ ...f, profilePhoto: url }))}
+                  onChange={(publicId) => setForm((f) => ({ ...f, profilePhoto: publicId }))}
+                  onUploadingChange={onUploadingChange}
                 />
                 {(['front', 'back', 'side'] as const).map((key) => (
                   <UploadZone
                     key={key}
                     label={key.charAt(0).toUpperCase() + key.slice(1)}
                     preview={form.photos[key]}
-                    onChange={(url) => setForm((f) => ({ ...f, photos: { ...f.photos, [key]: url } }))}
+                    onChange={(publicId) => setForm((f) => ({ ...f, photos: { ...f.photos, [key]: publicId } }))}
+                    onUploadingChange={onUploadingChange}
                   />
                 ))}
               </div>
+              {isUploading && (
+                <span className="text-xs text-gray-400">Uploading images…</span>
+              )}
             </div>
+
+            {saveError && (
+              <span className="text-xs text-[#e2001a]">{saveError}</span>
+            )}
           </div>
         )}
       </DialogContent>
 
       {view === 'form' ? (
         <DialogActions className="px-6 pb-6">
-          <Button onClick={handleBack} className="!text-black">
+          <Button onClick={handleBack} className="!text-black" disabled={saving}>
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isUploading || saving}
             className="!bg-[#e2001a] !text-white font-bold transition-all hover:!bg-[#b80015] hover:scale-105 disabled:!bg-gray-300 disabled:!text-gray-500"
           >
-            {editingId !== null ? 'Save' : 'Add'}
+            {saving ? 'Saving…' : editingId !== null ? 'Save' : 'Add'}
           </Button>
         </DialogActions>
       ) : (
