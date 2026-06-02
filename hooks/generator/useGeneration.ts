@@ -12,15 +12,17 @@ const batchService = new BatchService();
 const POLL_INTERVAL_MS = 5000;
 
 interface UseGenerationParams {
-  zipFile: File | null;
-  selectedGender: string | null;
+  frontDesign: File | null;
+  backDesign: File | null;
+  selectedModelId: number | null;
   selectedProjectName: string;
   selectedProjectId: number | null;
 }
 
 export function useGeneration({
-  zipFile,
-  selectedGender,
+  frontDesign,
+  backDesign,
+  selectedModelId,
   selectedProjectName,
   selectedProjectId,
 }: UseGenerationParams) {
@@ -43,8 +45,9 @@ export function useGeneration({
   > | null>(null);
 
   const canGenerate =
-    zipFile !== null &&
-    selectedGender !== null &&
+    frontDesign !== null &&
+    backDesign !== null &&
+    selectedModelId !== null &&
     selectedProjectId !== null;
 
   const stopPolling = () => {
@@ -71,8 +74,9 @@ export function useGeneration({
     let jobId: string;
     try {
       const result = await batchService.startBatch({
-        garmentZip: zipFile!,
-        gender: selectedGender!,
+        frontDesign: frontDesign!,
+        backDesign: backDesign!,
+        modelId: selectedModelId!,
         folderId: selectedProjectId!,
         options,
       });
@@ -92,7 +96,7 @@ export function useGeneration({
 
     setStatus({
       open: true,
-      message: `Generating "${zipFile!.name}" with ${selectedGender} model…`,
+      message: "Generating garment assets…",
       severity: "info",
     });
 

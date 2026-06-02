@@ -21,7 +21,12 @@ import type {
 
 export default function GeneratorPage() {
   const { redirectToLogin } = useAuthRedirects();
-  const { zipFile, handleZipUpload } = useClothing();
+  const {
+    frontDesign,
+    backDesign,
+    handleFrontUpload,
+    handleBackUpload,
+  } = useClothing();
   const {
     projects,
     selectedProjectId,
@@ -40,9 +45,11 @@ export default function GeneratorPage() {
     updateModel,
     deleteModel,
   } = useModels();
+  const selectedModelId = selectedModels[0]?.id ?? null;
   const generation = useGeneration({
-    zipFile,
-    selectedGender,
+    frontDesign,
+    backDesign,
+    selectedModelId,
     selectedProjectName: selectedProject?.name ?? "",
     selectedProjectId,
   });
@@ -95,9 +102,9 @@ export default function GeneratorPage() {
             variant="body1"
             className="text-gray-500 max-w-2xl"
           >
-            Upload a ZIP of your cycling apparel, choose
-            gender, and we&apos;ll render front, back and
-            side product images automatically.
+            Upload front and back views of your cycling
+            apparel, choose a model, and we&apos;ll render
+            studio-quality product images automatically.
           </Typography>
         </div>
       </div>
@@ -111,8 +118,10 @@ export default function GeneratorPage() {
         />
 
         <ClothingUploadSection
-          zipFile={zipFile}
-          onZipUpload={handleZipUpload}
+          frontDesign={frontDesign}
+          backDesign={backDesign}
+          onFrontUpload={handleFrontUpload}
+          onBackUpload={handleBackUpload}
         />
 
         <ModelSelectionSection
@@ -148,7 +157,7 @@ export default function GeneratorPage() {
         />
 
         <GenerateSection
-          clothingCount={zipFile ? 1 : 0}
+          clothingCount={frontDesign && backDesign ? 1 : 0}
           selectedGender={selectedGender ?? ""}
           selectedProjectName={selectedProject?.name ?? ""}
           generating={generation.generating}

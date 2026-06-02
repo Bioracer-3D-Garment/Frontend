@@ -1,61 +1,103 @@
 import { type ChangeEvent } from 'react';
 import { Typography } from '@mui/material';
-import { CloudUpload, FolderZip } from '@mui/icons-material';
+import { CloudUpload, Image } from '@mui/icons-material';
 import { SectionHeader } from '../SectionHeader';
 
-interface ClothingUploadSectionProps {
-  zipFile: File | null;
-  onZipUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+interface UploadZoneProps {
+  label: string;
+  inputId: string;
+  file: File | null;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function ClothingUploadSection({ zipFile, onZipUpload }: ClothingUploadSectionProps) {
-  const subtitle = zipFile
-    ? `${zipFile.name} · ${(zipFile.size / 1024 / 1024).toFixed(1)} MB`
-    : 'No ZIP selected';
-
+function UploadZone({ label, inputId, file, onChange }: UploadZoneProps) {
   return (
-    <section>
-      <SectionHeader step="02" title="Upload Garments" subtitle={subtitle} />
+    <div className="flex-1 min-w-0">
+      <Typography variant="caption" className="font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+        {label}
+      </Typography>
 
       <input
         type="file"
-        accept=".zip"
-        onChange={onZipUpload}
+        accept="image/*"
+        onChange={onChange}
         className="hidden"
-        id="upload-garment-zip"
+        id={inputId}
       />
 
-      {!zipFile ? (
-        <label htmlFor="upload-garment-zip">
-          <div className="border-2 border-dashed border-gray-300 bg-white hover:border-[#e2001a] hover:bg-red-50/30 transition-colors cursor-pointer py-16 flex flex-col items-center text-center rounded">
-            <CloudUpload className="text-gray-400 mb-2 text-[56px]" />
-            <Typography variant="h6" className="font-bold text-black">
-              Drop ZIP here or click to browse
+      {!file ? (
+        <label htmlFor={inputId}>
+          <div className="border-2 border-dashed border-gray-300 bg-white hover:border-[#e2001a] hover:bg-red-50/30 transition-colors cursor-pointer py-12 flex flex-col items-center text-center rounded">
+            <CloudUpload className="text-gray-400 mb-2 text-[48px]" />
+            <Typography variant="body2" className="font-bold text-black">
+              Click to browse
             </Typography>
-            <Typography variant="body2" className="text-gray-500 mt-1">
-              ZIP must contain one subfolder per garment, each with <code>front.jpg</code>, <code>back.jpg</code>, <code>side.jpg</code>
+            <Typography variant="caption" className="text-gray-500 mt-0.5">
+              JPG or PNG
             </Typography>
           </div>
         </label>
       ) : (
-        <div className="flex items-center gap-4 bg-white border border-gray-200 rounded px-5 py-4">
-          <FolderZip className="text-[#e2001a] text-[40px] shrink-0" />
+        <div className="flex items-center gap-3 bg-white border border-gray-200 rounded px-4 py-3">
+          <Image className="text-[#e2001a] text-[32px] shrink-0" />
           <div className="flex-1 min-w-0">
             <Typography variant="body2" className="font-bold text-black truncate">
-              {zipFile.name}
+              {file.name}
             </Typography>
             <Typography variant="caption" className="text-gray-500">
-              {(zipFile.size / 1024 / 1024).toFixed(1)} MB
+              {(file.size / 1024).toFixed(0)} KB
             </Typography>
           </div>
           <label
-            htmlFor="upload-garment-zip"
+            htmlFor={inputId}
             className="shrink-0 text-sm font-bold tracking-wider text-gray-500 hover:text-[#e2001a] cursor-pointer transition-colors"
           >
             CHANGE
           </label>
         </div>
       )}
+    </div>
+  );
+}
+
+interface ClothingUploadSectionProps {
+  frontDesign: File | null;
+  backDesign: File | null;
+  onFrontUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+  onBackUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+}
+
+export function ClothingUploadSection({
+  frontDesign,
+  backDesign,
+  onFrontUpload,
+  onBackUpload,
+}: ClothingUploadSectionProps) {
+  const uploadedCount = (frontDesign ? 1 : 0) + (backDesign ? 1 : 0);
+  const subtitle = uploadedCount === 0
+    ? 'No images selected'
+    : uploadedCount === 1
+    ? '1 of 2 images selected'
+    : 'Front and back designs ready';
+
+  return (
+    <section>
+      <SectionHeader step="02" title="Upload Garment Designs" subtitle={subtitle} />
+
+      <div className="flex gap-4">
+        <UploadZone
+          label="Front Design"
+          inputId="upload-garment-front"
+          file={frontDesign}
+          onChange={onFrontUpload}
+        />
+        <UploadZone
+          label="Back Design"
+          inputId="upload-garment-back"
+          file={backDesign}
+          onChange={onBackUpload}
+        />
+      </div>
     </section>
   );
 }

@@ -1,16 +1,14 @@
 import { getJwtToken } from "@/service/auth/auth_service";
 import type {
   BatchStatus,
-  GarmentError,
   Resolution,
   FrameOutputFormat,
 } from "@/types/types";
 
-// Use lightweight local value types here instead of the full `GenerationOptions` type
-
 interface BatchSubmitParams {
-  garmentZip: File;
-  gender: string;
+  frontDesign: File;
+  backDesign: File;
+  modelId: number;
   folderId: number;
   options?: {
     prompt?: string;
@@ -27,15 +25,15 @@ class BatchService {
   }
 
   async startBatch({
-    garmentZip,
-    gender,
+    frontDesign,
+    backDesign,
+    modelId,
     folderId,
     options,
   }: BatchSubmitParams): Promise<{ jobId: string }> {
     const formData = new FormData();
-    formData.append("garmentZip", garmentZip);
-    formData.append("gender", gender);
-    formData.append("folderId", String(folderId));
+    formData.append("frontDesign", frontDesign);
+    formData.append("backDesign", backDesign);
     if (options) {
       if (options.prompt)
         formData.append("prompt", options.prompt);
@@ -48,37 +46,27 @@ class BatchService {
         );
     }
 
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/batches`;
+    const queryParams = new URLSearchParams({
+      modelId: String(modelId),
+      folderId: String(folderId),
+    });
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/batches?${queryParams.toString()}`;
     const response = await fetch(url, {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: formData,
     });
 
-    if (response.status === 400) {
-      const body = await response.json().catch(() => ({}));
-      if (
-        Array.isArray(body.garmentErrors) &&
-        body.garmentErrors.length > 0
-      ) {
-        const issues = (
-          body.garmentErrors as GarmentError[]
-        )
-          .map(
-            (e) =>
-              `${e.garment}: missing ${e.missing.join(", ")}`,
-          )
-          .join("; ");
-        throw new Error(
-          `ZIP validation failed — ${issues}`,
-        );
-      }
-      throw new Error(body.message ?? "Invalid request");
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(body || "Failed to start batch");
     }
 
-    if (!response.ok)
-      throw new Error("Failed to start batch");
-    return response.json();
+    const text = await response.text();
+    const jobId = text.split(": ").pop()?.trim();
+    if (!jobId) throw new Error("Invalid response from server");
+    return { jobId };
   }
 
   async getBatchStatus(
