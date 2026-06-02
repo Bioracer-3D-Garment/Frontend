@@ -1,10 +1,18 @@
 import { getJwtToken } from '@/service/auth/auth_service';
-import type { BatchStatus, GarmentError } from '@/types/types';
+import type { BatchStatus, GarmentError, Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
+
+// Use lightweight local value types here instead of the full `GenerationOptions` type
 
 interface BatchSubmitParams {
   garmentZip: File;
   gender: string;
   folderId: number;
+  options?: {
+     prompt?: string;
+     resolution?: Resolution;
+     frameFormat?: FrameFormat;
+     frameOutputFormat?: FrameOutputFormat;
+  };
 }
 
 class BatchService {
@@ -14,11 +22,18 @@ class BatchService {
     return { Authorization: `Bearer ${token}` };
   }
 
-  async startBatch({ garmentZip, gender, folderId }: BatchSubmitParams): Promise<{ jobId: string }> {
+  async startBatch({ garmentZip, gender, folderId, options }: BatchSubmitParams): Promise<{ jobId: string }> {
     const formData = new FormData();
     formData.append('garmentZip', garmentZip);
     formData.append('gender', gender);
     formData.append('folderId', String(folderId));
+    if (options) {
+      if (options.prompt) formData.append('prompt', options.prompt);
+      if (options.resolution) formData.append('resolution', options.resolution);
+      if (options.frameFormat) formData.append('frameFormat', options.frameFormat);
+      if (options.frameOutputFormat) formData.append('frameOutputFormat', options.frameOutputFormat);
+    }
+    
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/batches`;
     const response = await fetch(url, {

@@ -96,6 +96,10 @@ export interface GeneratorStatus {
   severity: "success" | "info" | "warning" | "error";
 }
 
+export type Resolution = '1k' | '2k' | '4k';
+export type FrameFormat = 'portrait' | 'square' | 'landscape';
+export type FrameOutputFormat = 'png' | 'jpeg';
+
 export interface EditProjectDialogState {
   open: boolean;
   projectId: number | null;

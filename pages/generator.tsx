@@ -5,12 +5,15 @@ import { ProjectSelectorSection } from '@/components/generator/project/ProjectSe
 import { ClothingUploadSection } from '@/components/generator/clothing/ClothingUploadSection';
 import { ModelSelectionSection } from '@/components/generator/model/ModelSelectionSection';
 import { GenerateSection } from '@/components/generator/generation/GenerateSection';
+import { AdvancedSection } from '@/components/generator/generation/AdvancedSection';
 import { GenerationFeedback } from '@/components/generator/generation/GenerationFeedback';
 import { NewProjectDialog } from '@/components/generator/project/NewProjectDialog';
 import { useClothing } from '@/hooks/generator/useClothing';
 import { useProjects } from '@/hooks/generator/useFolders';
 import { useModels } from '@/hooks/generator/useModels';
 import { useGeneration } from '@/hooks/generator/useGeneration';
+import { useState } from 'react';
+import type { Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
 
 export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
@@ -22,6 +25,24 @@ export default function GeneratorPage() {
 		selectedGender,
 		selectedProjectName: selectedProject?.name ?? '',
 		selectedProjectId,
+	});
+
+	const [generationOptions, setGenerationOptions] = useState<{
+		resolution: Resolution;
+		frameFormat: FrameFormat;
+		frameOutputFormat: FrameOutputFormat;
+		prompt?: string;
+	}>({
+		resolution: '2k',
+		frameFormat: 'portrait',
+		frameOutputFormat: 'png',
+		prompt: "Fit the garment onto the model exactly as shown in the product image. " +
+            "Preserve all text, logos, graphics, colors, patterns, and fabric details on the garment " +
+            "with pixel-accurate fidelity — do not alter, distort, remove, or reinterpret any design elements. " +
+            "The garment contains the text 'Bioracer' — reproduce it exactly as printed. " +
+            "Do not modify the model's face, skin tone, hair, pose, or body in any way. " +
+            "The garment should appear naturally worn with realistic draping, fit, and lighting " +
+            "consistent with the model image."
 	});
 
 	return (
@@ -69,6 +90,11 @@ export default function GeneratorPage() {
 					onDeleteModel={deleteModel}
 				/>
 
+				<AdvancedSection
+					values={generationOptions}
+					onChange={(patch) => setGenerationOptions((prev) => ({ ...prev, ...patch }))}
+				/>
+
 				<GenerateSection
 					clothingCount={zipFile ? 1 : 0}
 					selectedGender={selectedGender ?? ''}
@@ -76,7 +102,7 @@ export default function GeneratorPage() {
 					generating={generation.generating}
 					progress={generation.progress}
 					canGenerate={generation.canGenerate}
-					onGenerate={generation.handleGenerate}
+					onGenerate={() => generation.handleGenerate(generationOptions)}
 				/>
 
 				{generation.generatedAssets && generation.generatedAssets.length > 0 && (
@@ -89,7 +115,7 @@ export default function GeneratorPage() {
 						</div>
 						<div className="flex gap-3 overflow-x-auto pb-2">
 							{generation.generatedAssets.map((asset) => (
-								<div key={asset.id} className="flex-shrink-0 w-32 rounded overflow-hidden bg-gray-100 border border-gray-200">
+								<div key={asset.id} className="shrink-0 w-32 rounded overflow-hidden bg-gray-100 border border-gray-200">
 									<img
 										src={asset.thumbnailUrl}
 										alt={`${asset.productId} · ${asset.poseId}`}

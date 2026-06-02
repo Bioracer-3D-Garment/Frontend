@@ -1,10 +1,10 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
-import type { GeneratorStatus, GeneratedAsset } from '@/types/types';
+import type { GeneratorStatus, GeneratedAsset, Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
 import BatchService from '@/service/batch/batchService';
 
 const batchService = new BatchService();
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 5000;
 
 interface UseGenerationParams {
 	zipFile: File | null;
@@ -30,7 +30,12 @@ export function useGeneration({ zipFile, selectedGender, selectedProjectName, se
 		}
 	};
 
-	const handleGenerate = async () => {
+	const handleGenerate = async (options?: {
+		resolution?: Resolution;
+		frameFormat?: FrameFormat;
+		frameOutputFormat?: FrameOutputFormat;
+		prompt?: string;
+	}) => {
 		setGenerating(true);
 		setGeneratedAssets(null);
 		setProgress({ completed: 0, total: 0 });
@@ -38,11 +43,12 @@ export function useGeneration({ zipFile, selectedGender, selectedProjectName, se
 
 		let jobId: string;
 		try {
-			const result = await batchService.startBatch({
-				garmentZip: zipFile!,
-				gender: selectedGender!,
-				folderId: selectedProjectId!,
-			});
+				const result = await batchService.startBatch({
+					garmentZip: zipFile!,
+					gender: selectedGender!,
+					folderId: selectedProjectId!,
+					options,
+				});
 			jobId = result.jobId;
 		} catch (err) {
 			setGenerating(false);
@@ -88,7 +94,7 @@ export function useGeneration({ zipFile, selectedGender, selectedProjectName, se
 					const failCount = batchStatus.failedItems.length;
 					setStatus({
 						open: true,
-						message: `Batch failed: ${failCount} combination${failCount !== 1 ? 's' : ''} could not be generated after retries.`,
+						message: `Batch failed: ${failCount} combinations could not be generated after retries.`,
 						severity: 'error',
 					});
 					setProgress({ completed: 0, total: 0 });
