@@ -55,13 +55,11 @@ export default function GeneratorPage() {
       resolution: "2k",
       frameOutputFormat: "png",
       prompt:
-        "Fit the garment onto the model exactly as shown in the product image. " +
-        "Preserve all text, logos, graphics, colors, patterns, and fabric details on the garment " +
-        "with pixel-accurate fidelity do not alter, distort, remove, or reinterpret any design elements. " +
-        "The garment contains the text 'Bioracer' reproduce it exactly as printed. " +
-        "Do not modify the model's face, skin tone, hair, pose, or body in any way. " +
-        "The garment should appear naturally worn with realistic draping, fit, and lighting " +
-        "consistent with the model image.",
+        "Full body studio photo of a young adult male model, slim athletic build, " +
+        "short brown hair, neutral confident expression, standing straight with " +
+        "arms relaxed at the sides, slight weight on one leg. Clean light grey " +
+        "studio background with soft floor shadow. Soft even studio lighting, " +
+        "sharp and clean, professional sportswear lookbook style.",
     });
 
   return (
