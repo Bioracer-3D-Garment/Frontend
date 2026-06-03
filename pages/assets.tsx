@@ -166,7 +166,7 @@ export default function AssetsPage() {
 			<EditProjectDialog
 				open={editDialog.open}
 				projectName={editDialog.projectName}
-				projectImageUrl={editDialog.projectImageUrl}
+				projectImageTag={editDialog.projectImageTag}
 				onProjectNameChange={editDialog.onProjectNameChange}
 				onImageUrlChange={editDialog.onImageUrlChange}
 				onClose={editDialog.onClose}

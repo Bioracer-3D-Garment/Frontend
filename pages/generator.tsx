@@ -17,7 +17,16 @@ import type { Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
 export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
 	const { projects, selectedProjectId, selectedProject, setSelectedProjectId, openCreateProjectDialog, dialog } = useProjects();
-	const { models, selectedModel, selectModel } = useModels();
+	const {
+		models,
+		loading: modelsLoading,
+		selectedModels,
+		selectedGender,
+		toggleModel,
+		addModel,
+		updateModel,
+		deleteModel,
+	} = useModels();
 
 	const [frontDesign, setFrontDesign] = useState<File | null>(null);
 	const [backDesign, setBackDesign] = useState<File | null>(null);
@@ -25,7 +34,7 @@ export default function GeneratorPage() {
 	const generation = useGeneration({
 		frontDesign,
 		backDesign,
-		modelId: selectedModel?.id ?? null,
+		modelId: selectedModels[0]?.id ?? null,
 		selectedProjectName: selectedProject?.name ?? '',
 		selectedProjectId,
 	});
@@ -88,7 +97,6 @@ export default function GeneratorPage() {
 					models={models}
 					loading={modelsLoading}
 					selectedModels={selectedModels}
-					subtitle={selectedModels.length > 0 ? selectedModels.map((m) => m.name).join(', ') : 'None selected'}
 					onToggleModel={toggleModel}
 					onAddModel={addModel}
 					onUpdateModel={updateModel}
@@ -106,7 +114,7 @@ export default function GeneratorPage() {
 					generating={generation.generating}
 					progress={generation.progress}
 					canGenerate={generation.canGenerate}
-					onGenerate={() => generation.handleGenerate(generationOptions)} selectedGender={''}				/>
+					onGenerate={() => generation.handleGenerate(generationOptions)} selectedGender={selectedGender ?? ''}				/>
 
 				{generation.generatedAssets && generation.generatedAssets.length > 0 && (
 					<section>
