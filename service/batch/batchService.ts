@@ -31,7 +31,14 @@ class BatchService {
     formData.append('modelId', String(modelId));
     formData.append('folderId', String(folderId));
 
-    const AdvancedSettingsJson = new Blob([JSON.stringify(advancedSettings)], {
+    // Map to the backend AdvancedSettings schema exactly: { resolution, outputFormat, prompt }.
+    // Note: the backend has no field for `frameFormat`, so it is intentionally not sent.
+    const advancedSettingsPayload = {
+      resolution: advancedSettings.resolution,
+      outputFormat: advancedSettings.frameOutputFormat,
+      prompt: advancedSettings.prompt,
+    };
+    const AdvancedSettingsJson = new Blob([JSON.stringify(advancedSettingsPayload)], {
       type: 'application/json',
     });
     formData.append('advancedSettings', AdvancedSettingsJson);
@@ -55,7 +62,22 @@ class BatchService {
     }
 
     if (!response.ok) throw new Error('Failed to start batch');
-    return response.json();
+
+    // The backend may respond with either JSON ({ jobId }) or a plain-text
+    // confirmation ("Job has been accepted: <jobId>"). Handle both robustly.
+    const raw = await response.text();
+
+    try {
+      const parsed = JSON.parse(raw) as { jobId?: string };
+      if (parsed.jobId) return { jobId: parsed.jobId };
+    } catch {
+      // Not JSON — fall through to plain-text parsing below.
+    }
+
+    const match = raw.match(/Job has been accepted:\s*(\S+)/);
+    if (match) return { jobId: match[1] };
+
+    throw new Error('Batch started but no job ID was returned');
   }
 
   async getBatchStatus(jobId: string): Promise<BatchStatus> {
