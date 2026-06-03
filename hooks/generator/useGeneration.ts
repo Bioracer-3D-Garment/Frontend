@@ -12,40 +12,22 @@ const batchService = new BatchService();
 const POLL_INTERVAL_MS = 5000;
 
 interface UseGenerationParams {
-  zipFile: File | null;
-  selectedGender: string | null;
-  selectedProjectName: string;
-  selectedProjectId: number | null;
+	frontDesign: File | null;
+	backDesign: File | null;
+	modelId: number | null;
+	selectedProjectName: string;
+	selectedProjectId: number | null;
 }
 
-export function useGeneration({
-  zipFile,
-  selectedGender,
-  selectedProjectName,
-  selectedProjectId,
-}: UseGenerationParams) {
-  const router = useRouter();
-  const [generating, setGenerating] = useState(false);
-  const [progress, setProgress] = useState({
-    completed: 0,
-    total: 0,
-  });
-  const [status, setStatus] = useState<GeneratorStatus>({
-    open: false,
-    message: "",
-    severity: "info",
-  });
-  const [generatedAssets, setGeneratedAssets] = useState<
-    GeneratedAsset[] | null
-  >(null);
-  const pollRef = useRef<ReturnType<
-    typeof setInterval
-  > | null>(null);
+export function useGeneration({ frontDesign, backDesign, modelId, selectedProjectName, selectedProjectId }: UseGenerationParams) {
+	const router = useRouter();
+	const [generating, setGenerating] = useState(false);
+	const [progress, setProgress] = useState({ completed: 0, total: 0 });
+	const [status, setStatus] = useState<GeneratorStatus>({ open: false, message: '', severity: 'info' });
+	const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[] | null>(null);
+	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const canGenerate =
-    zipFile !== null &&
-    selectedGender !== null &&
-    selectedProjectId !== null;
+	const canGenerate = frontDesign !== null && backDesign !== null && modelId !== null && selectedProjectId !== null;
 
   const stopPolling = () => {
     if (pollRef.current) {
@@ -68,33 +50,27 @@ export function useGeneration({
       severity: "info",
     });
 
-    let jobId: string;
-    try {
-      const result = await batchService.startBatch({
-        garmentZip: zipFile!,
-        gender: selectedGender!,
-        folderId: selectedProjectId!,
-        options,
-      });
-      jobId = result.jobId;
-    } catch (err) {
-      setGenerating(false);
-      setStatus({
-        open: true,
-        message:
-          err instanceof Error
-            ? err.message
-            : "Failed to start batch. Please try again.",
-        severity: "error",
-      });
-      return;
-    }
+		let jobId: string;
+		try {
+			const result = await batchService.startBatch({
+				frontDesign: frontDesign!,
+				backDesign: backDesign!,
+				modelId: modelId!,
+				folderId: selectedProjectId!,
+				advancedSettings: options,
+			});
+			jobId = result.jobId;
+		} catch (err) {
+			setGenerating(false);
+			setStatus({
+				open: true,
+				message: err instanceof Error ? err.message : 'Failed to start batch. Please try again.',
+				severity: 'error',
+			});
+			return;
+		}
 
-    setStatus({
-      open: true,
-      message: `Generating "${zipFile!.name}" with ${selectedGender} model…`,
-      severity: "info",
-    });
+		setStatus({ open: true, message: 'Generating assets…', severity: 'info' });
 
     pollRef.current = setInterval(async () => {
       try {

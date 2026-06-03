@@ -6,17 +6,19 @@ import type {
   FrameOutputFormat,
 } from "@/types/types";
 
-// Use lightweight local value types here instead of the full `GenerationOptions` type
+interface AdvancedSettings {
+  prompt?: string;
+  resolution?: Resolution;
+  frameFormat?: FrameFormat;
+  frameOutputFormat?: FrameOutputFormat;
+}
 
 interface BatchSubmitParams {
-  garmentZip: File;
-  gender: string;
+  frontDesign: File;
+  backDesign: File;
+  modelId: number;
   folderId: number;
-  options?: {
-    prompt?: string;
-    resolution?: Resolution;
-    frameOutputFormat?: FrameOutputFormat;
-  };
+  advancedSettings?: AdvancedSettings;
 }
 
 class BatchService {
@@ -26,27 +28,25 @@ class BatchService {
     return { Authorization: `Bearer ${token}` };
   }
 
-  async startBatch({
-    garmentZip,
-    gender,
-    folderId,
-    options,
-  }: BatchSubmitParams): Promise<{ jobId: string }> {
+  async startBatch({ frontDesign, backDesign, modelId, folderId, advancedSettings = {} }: BatchSubmitParams): Promise<{ jobId: string }> {
     const formData = new FormData();
-    formData.append("garmentZip", garmentZip);
-    formData.append("gender", gender);
-    formData.append("folderId", String(folderId));
-    if (options) {
-      if (options.prompt)
-        formData.append("prompt", options.prompt);
-      if (options.resolution)
-        formData.append("resolution", options.resolution);
-      if (options.frameOutputFormat)
-        formData.append(
-          "frameOutputFormat",
-          options.frameOutputFormat,
-        );
-    }
+
+    formData.append('frontDesign', frontDesign);
+    formData.append('backDesign', backDesign);
+    formData.append('modelId', String(modelId));
+    formData.append('folderId', String(folderId));
+
+    // Map to the backend AdvancedSettings schema exactly: { resolution, outputFormat, prompt }.
+    // Note: the backend has no field for `frameFormat`, so it is intentionally not sent.
+    const advancedSettingsPayload = {
+      resolution: advancedSettings.resolution,
+      outputFormat: advancedSettings.frameOutputFormat,
+      prompt: advancedSettings.prompt,
+    };
+    const AdvancedSettingsJson = new Blob([JSON.stringify(advancedSettingsPayload)], {
+      type: 'application/json',
+    });
+    formData.append('advancedSettings', AdvancedSettingsJson);
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/batches`;
     const response = await fetch(url, {
@@ -57,28 +57,32 @@ class BatchService {
 
     if (response.status === 400) {
       const body = await response.json().catch(() => ({}));
-      if (
-        Array.isArray(body.garmentErrors) &&
-        body.garmentErrors.length > 0
-      ) {
-        const issues = (
-          body.garmentErrors as GarmentError[]
-        )
-          .map(
-            (e) =>
-              `${e.garment}: missing ${e.missing.join(", ")}`,
-          )
-          .join("; ");
-        throw new Error(
-          `ZIP validation failed — ${issues}`,
-        );
+      if (Array.isArray(body.garmentErrors) && body.garmentErrors.length > 0) {
+        const issues = (body.garmentErrors as GarmentError[])
+          .map((e) => `${e.garment}: missing ${e.missing.join(', ')}`)
+          .join('; ');
+        throw new Error(`Validation failed — ${issues}`);
       }
       throw new Error(body.message ?? "Invalid request");
     }
 
-    if (!response.ok)
-      throw new Error("Failed to start batch");
-    return response.json();
+    if (!response.ok) throw new Error('Failed to start batch');
+
+    // The backend may respond with either JSON ({ jobId }) or a plain-text
+    // confirmation ("Job has been accepted: <jobId>"). Handle both robustly.
+    const raw = await response.text();
+
+    try {
+      const parsed = JSON.parse(raw) as { jobId?: string };
+      if (parsed.jobId) return { jobId: parsed.jobId };
+    } catch {
+      // Not JSON — fall through to plain-text parsing below.
+    }
+
+    const match = raw.match(/Job has been accepted:\s*(\S+)/);
+    if (match) return { jobId: match[1] };
+
+    throw new Error('Batch started but no job ID was returned');
   }
 
   async getBatchStatus(

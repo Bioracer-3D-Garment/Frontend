@@ -7,9 +7,9 @@ import { ModelManagementModal } from './ModelManagementModal';
 
 interface ModelSelectionSectionProps {
   models: Model[];
-  loading?: boolean;
+  loading: boolean;
   selectedModels: Model[];
-  subtitle: string;
+  subtitle?: string;
   onToggleModel: (id: number) => void;
   onAddModel: (model: Omit<Model, 'id' | 'selected'>) => Promise<void>;
   onUpdateModel: (id: number, updates: Partial<Omit<Model, 'id'>>) => Promise<void>;
@@ -20,7 +20,7 @@ export function ModelSelectionSection({
   models,
   loading,
   selectedModels,
-  subtitle,
+  subtitle = '',
   onToggleModel,
   onAddModel,
   onUpdateModel,
@@ -30,7 +30,7 @@ export function ModelSelectionSection({
 
   return (
     <section>
-      <SectionHeader step="03" title="Select Models" subtitle={loading ? 'Loading…' : subtitle} />
+      <SectionHeader step="03" title="Select Models" subtitle={subtitle}/>
 
       {selectedModels.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -59,6 +59,6 @@ export function ModelSelectionSection({
         onUpdate={onUpdateModel}
         onDelete={onDeleteModel}
       />
-    </section>
+    </section> 
   );
 }
