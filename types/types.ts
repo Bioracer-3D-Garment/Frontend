@@ -38,11 +38,20 @@ export interface ProjectAssetsPage {
 
 export interface BatchStatus {
   jobId: string;
-  status: "PENDING" | "RUNNING" | "DONE" | "PARTIAL" | "FAILED";
+  status:
+    | "PENDING"
+    | "RUNNING"
+    | "DONE"
+    | "PARTIAL"
+    | "FAILED";
   completed: number;
   total: number;
   uploadedCount: number;
-  failedItems: { productId: string; poseId: string; reason: string }[];
+  failedItems: {
+    productId: string;
+    poseId: string;
+    reason: string;
+  }[];
   assets: GeneratedAsset[] | null;
 }
 
@@ -96,9 +105,15 @@ export interface GeneratorStatus {
   severity: "success" | "info" | "warning" | "error";
 }
 
-export type Resolution = '1k' | '2k' | '4k';
-export type FrameFormat = 'portrait' | 'square' | 'landscape';
-export type FrameOutputFormat = 'png' | 'jpeg';
+export type Resolution = "1k" | "2k" | "4k";
+export type FrameOutputFormat = "png" | "jpeg";
+
+export interface VideoOptions {
+  enabled: boolean;
+  /** Clip length in seconds, 3–15 (Kling v3). */
+  durationSeconds: number;
+  prompt?: string;
+}
 
 export interface EditProjectDialogState {
   open: boolean;

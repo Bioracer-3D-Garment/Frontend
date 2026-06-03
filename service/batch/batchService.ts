@@ -1,5 +1,10 @@
-import { getJwtToken } from '@/service/auth/auth_service';
-import type { BatchStatus, GarmentError, Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
+import { getJwtToken } from "@/service/auth/auth_service";
+import type {
+  BatchStatus,
+  GarmentError,
+  Resolution,
+  FrameOutputFormat,
+} from "@/types/types";
 
 interface AdvancedSettings {
   prompt?: string;
@@ -19,7 +24,7 @@ interface BatchSubmitParams {
 class BatchService {
   private getAuthHeaders(): Record<string, string> {
     const token = getJwtToken();
-    if (!token) throw new Error('JWT token is not set');
+    if (!token) throw new Error("JWT token is not set");
     return { Authorization: `Bearer ${token}` };
   }
 
@@ -45,7 +50,7 @@ class BatchService {
 
     const url = `${process.env.NEXT_PUBLIC_API_URL}/batches`;
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: this.getAuthHeaders(),
       body: formData,
     });
@@ -58,7 +63,7 @@ class BatchService {
           .join('; ');
         throw new Error(`Validation failed — ${issues}`);
       }
-      throw new Error(body.message ?? 'Invalid request');
+      throw new Error(body.message ?? "Invalid request");
     }
 
     if (!response.ok) throw new Error('Failed to start batch');
@@ -80,27 +85,34 @@ class BatchService {
     throw new Error('Batch started but no job ID was returned');
   }
 
-  async getBatchStatus(jobId: string): Promise<BatchStatus> {
+  async getBatchStatus(
+    jobId: string,
+  ): Promise<BatchStatus> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/batches/${jobId}/status`;
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to get batch status');
+    if (!response.ok)
+      throw new Error("Failed to get batch status");
     return response.json();
   }
 
   async downloadBatch(jobId: string): Promise<void> {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/batches/${jobId}/download`;
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: this.getAuthHeaders(),
     });
-    if (response.status === 409) throw new Error('Job is not finished yet — please wait until generation completes.');
-    if (!response.ok) throw new Error('Failed to download batch results');
+    if (response.status === 409)
+      throw new Error(
+        "Job is not finished yet — please wait until generation completes.",
+      );
+    if (!response.ok)
+      throw new Error("Failed to download batch results");
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = objectUrl;
     a.download = `batch-${jobId}.zip`;
     a.click();
