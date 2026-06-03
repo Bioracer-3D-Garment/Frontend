@@ -108,6 +108,13 @@ export interface GeneratorStatus {
 export type Resolution = "1k" | "2k" | "4k";
 export type FrameOutputFormat = "png" | "jpeg";
 
+export interface VideoOptions {
+  enabled: boolean;
+  /** Clip length in seconds, 3–15 (Kling v3). */
+  durationSeconds: number;
+  prompt?: string;
+}
+
 export interface EditProjectDialogState {
   open: boolean;
   projectId: number | null;

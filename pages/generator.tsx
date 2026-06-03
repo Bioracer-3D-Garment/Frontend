@@ -5,7 +5,7 @@ import { ProjectSelectorSection } from "@/components/generator/project/ProjectSe
 import { ClothingUploadSection } from "@/components/generator/clothing/ClothingUploadSection";
 import { ModelSelectionSection } from "@/components/generator/model/ModelSelectionSection";
 import { GenerateSection } from "@/components/generator/generation/GenerateSection";
-import { AdvancedSection } from "@/components/generator/generation/AdvancedSection";
+import { ModeSelectionSection } from "@/components/generator/generation/ModeSelectionSection";
 import { GenerationFeedback } from "@/components/generator/generation/GenerationFeedback";
 import { NewProjectDialog } from "@/components/generator/project/NewProjectDialog";
 import { useClothing } from "@/hooks/generator/useClothing";
@@ -16,6 +16,7 @@ import { useState } from "react";
 import type {
   Resolution,
   FrameOutputFormat,
+  VideoOptions,
 } from "@/types/types";
 
 export default function GeneratorPage() {
@@ -60,6 +61,13 @@ export default function GeneratorPage() {
         "arms relaxed at the sides, slight weight on one leg. Clean light grey " +
         "studio background with soft floor shadow. Soft even studio lighting, " +
         "sharp and clean, professional sportswear lookbook style.",
+    });
+
+  const [videoOptions, setVideoOptions] =
+    useState<VideoOptions>({
+      enabled: false,
+      durationSeconds: 5,
+      prompt: "",
     });
 
   return (
@@ -122,10 +130,17 @@ export default function GeneratorPage() {
           onDeleteModel={deleteModel}
         />
 
-        <AdvancedSection
-          values={generationOptions}
-          onChange={(patch) =>
+        <ModeSelectionSection
+          photoValues={generationOptions}
+          onPhotoChange={(patch) =>
             setGenerationOptions((prev) => ({
+              ...prev,
+              ...patch,
+            }))
+          }
+          videoValues={videoOptions}
+          onVideoChange={(patch) =>
+            setVideoOptions((prev) => ({
               ...prev,
               ...patch,
             }))

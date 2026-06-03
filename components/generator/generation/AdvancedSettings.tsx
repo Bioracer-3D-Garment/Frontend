@@ -48,9 +48,9 @@ export function AdvancedSettings({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-gray-500">
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div className="flex flex-col">
+          <h3 className="mb-2 flex min-h-8 items-end text-xs font-bold uppercase tracking-[0.25em] text-gray-500">
             Output resolution
           </h3>
           <ToggleButtonGroup
@@ -100,8 +100,8 @@ export function AdvancedSettings({
 
         {/* Frame format removed intentionally */}
 
-        <div>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-gray-500">
+        <div className="flex flex-col">
+          <h3 className="mb-2 flex min-h-8 items-end text-xs font-bold uppercase tracking-[0.25em] text-gray-500">
             Output format
           </h3>
           <ToggleButtonGroup
