@@ -79,6 +79,27 @@ class ProjectService {
 
     return response.json() as Promise<Project>;
   }
+
+  public async deleteProject(projectId: number): Promise<void> {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`,
+      {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error("Delete project failed:", {
+        status: response.status,
+        body: errorText,
+      });
+
+      throw new Error("Failed to delete project");
+    }
+  }
 }
 
 export default ProjectService;

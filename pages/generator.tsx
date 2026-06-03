@@ -86,8 +86,13 @@ export default function GeneratorPage() {
 
 				<ModelSelectionSection
 					models={models}
-					subtitle={selectedModel?.name ?? 'None selected'}
-					onToggleModel={selectModel}
+					loading={modelsLoading}
+					selectedModels={selectedModels}
+					subtitle={selectedModels.length > 0 ? selectedModels.map((m) => m.name).join(', ') : 'None selected'}
+					onToggleModel={toggleModel}
+					onAddModel={addModel}
+					onUpdateModel={updateModel}
+					onDeleteModel={deleteModel}
 				/>
 
 				<AdvancedSection
