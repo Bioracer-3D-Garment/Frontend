@@ -21,10 +21,14 @@ export function ProjectGrid({
           key={project.id}
           role="button"
           tabIndex={0}
-          onClick={() => onSelectProject(project.id)}
+          onClick={() => {
+            if (project.id == null) return;
+            onSelectProject(project.id);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
+              if (project.id == null) return;
               onSelectProject(project.id);
             }
           }}
@@ -32,10 +36,12 @@ export function ProjectGrid({
         >
           <div className="relative aspect-square bg-gray-100 overflow-hidden w-full">
             {project.coverImage ? (
-              <CldImage
-                width="300"
-                height="300"
-                src={project.coverImage}
+              <img
+                src={
+                  process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                  "/" +
+                  project.coverImage
+                }
                 alt={project.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
@@ -49,6 +55,7 @@ export function ProjectGrid({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (project.id == null) return;
                   onEditProject(project.id);
                 }}
                 className="p-2 bg-white rounded-full hover:bg-[#e2001a] text-gray-700 hover:text-white transition-colors"

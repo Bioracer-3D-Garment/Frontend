@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Typography } from "@mui/material";
 import { Check } from "@mui/icons-material";
 import type { Model } from "@/types/types";
@@ -10,13 +9,6 @@ interface ModelCardProps {
 }
 
 export default function ModelCard({ model, onToggle }: ModelCardProps) {
-  const [imageError, setImageError] = useState(false);
-
-  const imageSource =
-    imageError && model.photos?.front
-      ? model.photos.front
-      : model.profilePicture;
-
   return (
     <button
       type="button"
@@ -35,10 +27,12 @@ export default function ModelCard({ model, onToggle }: ModelCardProps) {
       </div>
 
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-gray-100 ring-1 ring-black/5">
-        <CldImage
-          width={400}
-          height={400}
-          src={model.profilePicture}
+        <img
+          src={
+            process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+            "/" +
+            model.profilePicture
+          }
           alt={model.name}
           className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
         />

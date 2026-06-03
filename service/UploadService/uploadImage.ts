@@ -20,7 +20,7 @@ export async function uploadImage(
   }
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/cloudinary/model/poses?${searchParams.toString()}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/upload/model/poses?${searchParams.toString()}`,
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },

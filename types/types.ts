@@ -84,7 +84,7 @@ export interface ProjectUser {
 }
 
 export interface Project {
-  id: number;
+  id?: number;
   name: string;
   coverImage: string;
   user?: ProjectUser;
@@ -96,9 +96,9 @@ export interface GeneratorStatus {
   severity: "success" | "info" | "warning" | "error";
 }
 
-export type Resolution = '1k' | '2k' | '4k';
-export type FrameFormat = 'portrait' | 'square' | 'landscape';
-export type FrameOutputFormat = 'png' | 'jpeg';
+export type Resolution = "1k" | "2k" | "4k";
+export type FrameFormat = "portrait" | "square" | "landscape";
+export type FrameOutputFormat = "png" | "jpeg";
 
 export interface EditProjectDialogState {
   open: boolean;

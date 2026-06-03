@@ -63,10 +63,12 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                 className="group bg-white border border-gray-200 hover:border-black transition-all rounded overflow-hidden"
               >
                 <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                  <CldImage
-                    width="300"
-                    height="300"
-                    src={asset.publicId}
+                  <img
+                    src={
+                      process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                      "/" +
+                      asset.publicId
+                    }
                     alt={`${garmentName} ${asset.model}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
