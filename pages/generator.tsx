@@ -97,6 +97,7 @@ export default function GeneratorPage() {
 					models={models}
 					loading={modelsLoading}
 					selectedModels={selectedModels}
+					subtitle={selectedModels.length > 0 ? selectedModels.map((m) => m.name).join(', ') : 'None selected'}
 					onToggleModel={toggleModel}
 					onAddModel={addModel}
 					onUpdateModel={updateModel}

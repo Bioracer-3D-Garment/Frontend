@@ -9,6 +9,7 @@ interface ModelSelectionSectionProps {
   models: Model[];
   loading: boolean;
   selectedModels: Model[];
+  subtitle?: string;
   onToggleModel: (id: number) => void;
   onAddModel: (model: Omit<Model, 'id' | 'selected'>) => Promise<void>;
   onUpdateModel: (id: number, updates: Partial<Omit<Model, 'id'>>) => Promise<void>;
@@ -19,6 +20,7 @@ export function ModelSelectionSection({
   models,
   loading,
   selectedModels,
+  subtitle = '',
   onToggleModel,
   onAddModel,
   onUpdateModel,
@@ -28,7 +30,7 @@ export function ModelSelectionSection({
 
   return (
     <section>
-      <SectionHeader step="03" title="Select Models" subtitle=""/>
+      <SectionHeader step="03" title="Select Models" subtitle={subtitle}/>
 
       {selectedModels.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
