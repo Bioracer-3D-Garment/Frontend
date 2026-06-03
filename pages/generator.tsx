@@ -8,7 +8,6 @@ import { GenerateSection } from '@/components/generator/generation/GenerateSecti
 import { AdvancedSection } from '@/components/generator/generation/AdvancedSection';
 import { GenerationFeedback } from '@/components/generator/generation/GenerationFeedback';
 import { NewProjectDialog } from '@/components/generator/project/NewProjectDialog';
-import { useClothing } from '@/hooks/generator/useClothing';
 import { useProjects } from '@/hooks/generator/useFolders';
 import { useModels } from '@/hooks/generator/useModels';
 import { useGeneration } from '@/hooks/generator/useGeneration';
@@ -17,12 +16,16 @@ import type { Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
 
 export default function GeneratorPage() {
 	const { redirectToLogin } = useAuthRedirects();
-	const { zipFile, handleZipUpload } = useClothing();
 	const { projects, selectedProjectId, selectedProject, setSelectedProjectId, openCreateProjectDialog, dialog } = useProjects();
-	const { models, selectedModel, selectedGender, selectModel } = useModels();
+	const { models, selectedModel, selectModel } = useModels();
+
+	const [frontDesign, setFrontDesign] = useState<File | null>(null);
+	const [backDesign, setBackDesign] = useState<File | null>(null);
+
 	const generation = useGeneration({
-		zipFile,
-		selectedGender,
+		frontDesign,
+		backDesign,
+		modelId: selectedModel?.id ?? null,
 		selectedProjectName: selectedProject?.name ?? '',
 		selectedProjectId,
 	});
@@ -61,7 +64,7 @@ export default function GeneratorPage() {
 						Create studio-quality visuals.
 					</Typography>
 					<Typography variant="body1" className="text-gray-500 max-w-2xl">
-						Upload a ZIP of your cycling apparel, choose gender, and we&apos;ll render front, back and side product images automatically.
+						Upload your cycling apparel designs, choose a model, and we&apos;ll render front, back and side product images automatically.
 					</Typography>
 				</div>
 			</div>
@@ -75,8 +78,10 @@ export default function GeneratorPage() {
 				/>
 
 				<ClothingUploadSection
-					zipFile={zipFile}
-					onZipUpload={handleZipUpload}
+					frontDesign={frontDesign}
+					backDesign={backDesign}
+					onFrontUpload={setFrontDesign}
+					onBackUpload={setBackDesign}
 				/>
 
 				<ModelSelectionSection
@@ -91,14 +96,12 @@ export default function GeneratorPage() {
 				/>
 
 				<GenerateSection
-					clothingCount={zipFile ? 1 : 0}
-					selectedGender={selectedGender ?? ''}
+					clothingCount={(frontDesign ? 1 : 0) + (backDesign ? 1 : 0)}
 					selectedProjectName={selectedProject?.name ?? ''}
 					generating={generation.generating}
 					progress={generation.progress}
 					canGenerate={generation.canGenerate}
-					onGenerate={() => generation.handleGenerate(generationOptions)}
-				/>
+					onGenerate={() => generation.handleGenerate(generationOptions)} selectedGender={''}				/>
 
 				{generation.generatedAssets && generation.generatedAssets.length > 0 && (
 					<section>
