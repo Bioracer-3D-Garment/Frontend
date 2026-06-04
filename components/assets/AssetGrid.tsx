@@ -1,7 +1,6 @@
 import { Typography, IconButton } from "@mui/material";
 import { Download, Delete } from "@mui/icons-material";
 import type { Asset } from "@/types/types";
-import { CldImage } from "next-cloudinary";
 
 interface AssetGridProps {
   assets: Asset[];
@@ -25,7 +24,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = `${asset.clothing}_${asset.model}.jpg`;
+    a.download = `${asset.clothing}_${asset.model}.${asset.type === "video" ? "mp4" : "jpg"}`;
     a.click();
     URL.revokeObjectURL(objectUrl);
   };
@@ -63,13 +62,25 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                 className="group bg-white border border-gray-200 hover:border-black transition-all rounded overflow-hidden"
               >
                 <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                  <CldImage
-                    width="300"
-                    height="300"
-                    src={asset.publicId}
-                    alt={`${garmentName} ${asset.model}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {/* Use the backend-provided URL (it embeds the correct Cloudinary
+                      cloud + version). CldImage + publicId would rebuild the URL from
+                      the frontend's hardcoded cloud name and resolve the wrong image. */}
+                  {asset.type === "video" ? (
+                    <video
+                      src={asset.secureUrl}
+                      poster={asset.thumbnail || undefined}
+                      controls
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={asset.thumbnail || asset.secureUrl}
+                      alt={`${garmentName} ${asset.model}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  )}
                   <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-0.5 rounded-full capitalize tracking-wider">
                     {asset.model}
                   </div>

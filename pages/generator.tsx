@@ -164,7 +164,10 @@ export default function GeneratorPage() {
           progress={generation.progress}
           canGenerate={generation.canGenerate}
           onGenerate={() =>
-            generation.handleGenerate(generationOptions)
+            generation.handleGenerate(
+              generationOptions,
+              videoOptions,
+            )
           }
         />
 

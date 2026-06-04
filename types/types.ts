@@ -53,6 +53,8 @@ export interface BatchStatus {
     reason: string;
   }[];
   assets: GeneratedAsset[] | null;
+  // Failure reason when status is FAILED (e.g. the video pipeline error); null otherwise.
+  errorMessage?: string | null;
 }
 
 // Cloudinary public ID for each pose image of a model (front / back / side).

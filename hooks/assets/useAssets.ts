@@ -8,7 +8,7 @@ function toAsset(ga: GeneratedAsset): Asset {
   return {
     id: ga.id,
     name: `${ga.productId} · ${ga.poseId}`,
-    type: "image",
+    type: ga.poseId === "video" ? "video" : "image",
     size: "",
     date: ga.createdAt,
     clothing: ga.productId,
