@@ -5,7 +5,7 @@ import { ProjectSelectorSection } from '@/components/generator/project/ProjectSe
 import { ClothingUploadSection } from '@/components/generator/clothing/ClothingUploadSection';
 import { ModelSelectionSection } from '@/components/generator/model/ModelSelectionSection';
 import { GenerateSection } from '@/components/generator/generation/GenerateSection';
-import { ModeSelectionSection } from '@/components/generator/generation/ModeSelectionSection';
+import { ModusSelectionSection } from '@/components/generator/generation/ModusSelectionSection';
 import { GenerationFeedback } from '@/components/generator/generation/GenerationFeedback';
 import { NewProjectDialog } from '@/components/generator/project/NewProjectDialog';
 import { useProjects } from '@/hooks/generator/useFolders';
@@ -135,7 +135,7 @@ export default function GeneratorPage() {
           onDeleteModel={deleteModel}
         />
 
-        <ModeSelectionSection
+        <ModusSelectionSection
           photoValues={generationOptions}
           onPhotoChange={(patch) =>
             setGenerationOptions((prev) => ({

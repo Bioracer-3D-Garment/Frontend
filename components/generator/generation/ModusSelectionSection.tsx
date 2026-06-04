@@ -22,7 +22,7 @@ interface ModeSelectionSectionProps {
   onVideoChange: (patch: Partial<VideoOptions>) => void;
 }
 
-export function ModeSelectionSection({
+export function ModusSelectionSection({
   photoValues,
   onPhotoChange,
   videoValues,
@@ -95,4 +95,4 @@ export function ModeSelectionSection({
   );
 }
 
-export default ModeSelectionSection;
+export default ModusSelectionSection;
