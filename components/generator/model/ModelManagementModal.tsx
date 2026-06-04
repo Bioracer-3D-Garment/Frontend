@@ -225,11 +225,11 @@ export function ModelManagementModal({
     setUploadingSlots((prev) => new Set(prev).add(slot));
     try {
       const pose = slot === "profilePhoto" ? "coverImage" : slot;
-      const secureUrl = await uploadImage(file, pose, editingId ?? undefined);
+      const publicId = await uploadImage(file, pose, editingId ?? undefined);
       if (slot === "profilePhoto") {
-        setForm((f) => ({ ...f, profilePhoto: secureUrl }));
+        setForm((f) => ({ ...f, profilePhoto: publicId }));
       } else {
-        setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: secureUrl } }));
+        setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: publicId } }));
       }
     } catch {
       // Upload failed — clear the slot so the user can retry

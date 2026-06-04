@@ -5,39 +5,50 @@ import { ProjectSelectorSection } from '@/components/generator/project/ProjectSe
 import { ClothingUploadSection } from '@/components/generator/clothing/ClothingUploadSection';
 import { ModelSelectionSection } from '@/components/generator/model/ModelSelectionSection';
 import { GenerateSection } from '@/components/generator/generation/GenerateSection';
-import { AdvancedSection } from '@/components/generator/generation/AdvancedSection';
+import { ModeSelectionSection } from '@/components/generator/generation/ModeSelectionSection';
 import { GenerationFeedback } from '@/components/generator/generation/GenerationFeedback';
 import { NewProjectDialog } from '@/components/generator/project/NewProjectDialog';
 import { useProjects } from '@/hooks/generator/useFolders';
 import { useModels } from '@/hooks/generator/useModels';
 import { useGeneration } from '@/hooks/generator/useGeneration';
+import { useClothing } from '@/hooks/generator/useClothing';
 import { useState } from 'react';
-import type { Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
+import type { Resolution, FrameOutputFormat, VideoOptions } from '@/types/types';
 
 export default function GeneratorPage() {
-	const { redirectToLogin } = useAuthRedirects();
-	const { projects, selectedProjectId, selectedProject, setSelectedProjectId, openCreateProjectDialog, dialog } = useProjects();
-	const {
-		models,
-		loading: modelsLoading,
-		selectedModels,
-		selectedGender,
-		toggleModel,
-		addModel,
-		updateModel,
-		deleteModel,
-	} = useModels();
-
-	const [frontDesign, setFrontDesign] = useState<File | null>(null);
-	const [backDesign, setBackDesign] = useState<File | null>(null);
-
-	const generation = useGeneration({
-		frontDesign,
-		backDesign,
-		modelId: selectedModels[0]?.id ?? null,
-		selectedProjectName: selectedProject?.name ?? '',
-		selectedProjectId,
-	});
+  const { redirectToLogin } = useAuthRedirects();
+  const {
+    frontDesign,
+    backDesign,
+    handleFrontUpload,
+    handleBackUpload,
+  } = useClothing();
+  const {
+    projects,
+    selectedProjectId,
+    selectedProject,
+    setSelectedProjectId,
+    openCreateProjectDialog,
+    dialog,
+  } = useProjects();
+  const {
+    models,
+    loading: modelsLoading,
+    selectedModels,
+    selectedGender,
+    toggleModel,
+    addModel,
+    updateModel,
+    deleteModel,
+  } = useModels();
+  const selectedModelId = selectedModels[0]?.id ?? null;
+  const generation = useGeneration({
+    frontDesign,
+    backDesign,
+    selectedModelId,
+    selectedProjectName: selectedProject?.name ?? "",
+    selectedProjectId,
+  });
 
   const [generationOptions, setGenerationOptions] =
     useState<{
@@ -66,22 +77,33 @@ export default function GeneratorPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar onLogout={redirectToLogin} />
 
-			<div className="bg-white border-b border-gray-200">
-				<div className="max-w-7xl mx-auto px-8 py-12">
-					<div className="flex items-center gap-2 mb-3">
-						<span className="inline-block w-8 h-0.75 bg-[#e2001a]" />
-						<Typography variant="overline" className="text-[#e2001a] font-bold tracking-[0.2em]">
-							ASSET GENERATOR
-						</Typography>
-					</div>
-					<Typography variant="h3" className="font-extrabold text-black mb-1">
-						Create studio-quality visuals.
-					</Typography>
-					<Typography variant="body1" className="text-gray-500 max-w-2xl">
-						Upload your cycling apparel designs, choose a model, and we&apos;ll render front, back and side product images automatically.
-					</Typography>
-				</div>
-			</div>
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-8 py-12">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-block w-8 h-0.75 bg-[#e2001a]" />
+            <Typography
+              variant="overline"
+              className="text-[#e2001a] font-bold tracking-[0.2em]"
+            >
+              ASSET GENERATOR
+            </Typography>
+          </div>
+          <Typography
+            variant="h3"
+            className="font-extrabold text-black mb-1"
+          >
+            Create studio-quality visuals.
+          </Typography>
+          <Typography
+            variant="body1"
+            className="text-gray-500 max-w-2xl"
+          >
+            Upload front and back views of your cycling
+            apparel, choose a model, and we&apos;ll render
+            studio-quality product images automatically.
+          </Typography>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-8 py-12 space-y-12">
         <ProjectSelectorSection
@@ -91,12 +113,12 @@ export default function GeneratorPage() {
           onCreateProject={openCreateProjectDialog}
         />
 
-				<ClothingUploadSection
-					frontDesign={frontDesign}
-					backDesign={backDesign}
-					onFrontUpload={setFrontDesign}
-					onBackUpload={setBackDesign}
-				/>
+        <ClothingUploadSection
+          frontDesign={frontDesign}
+          backDesign={backDesign}
+          onFrontUpload={handleFrontUpload}
+          onBackUpload={handleBackUpload}
+        />
 
         <ModelSelectionSection
           models={models}
@@ -130,13 +152,20 @@ export default function GeneratorPage() {
           }
         />
 
-				<GenerateSection
-					clothingCount={(frontDesign ? 1 : 0) + (backDesign ? 1 : 0)}
-					selectedProjectName={selectedProject?.name ?? ''}
-					generating={generation.generating}
-					progress={generation.progress}
-					canGenerate={generation.canGenerate}
-					onGenerate={() => generation.handleGenerate(generationOptions)} selectedGender={selectedGender ?? ''}				/>
+        <GenerateSection
+          clothingCount={frontDesign && backDesign ? 1 : 0}
+          selectedGender={selectedGender ?? ""}
+          selectedProjectName={selectedProject?.name ?? ""}
+          generating={generation.generating}
+          progress={generation.progress}
+          canGenerate={generation.canGenerate}
+          onGenerate={() =>
+            generation.handleGenerate(
+              generationOptions,
+              videoOptions,
+            )
+          }
+        />
 
         {generation.generatedAssets &&
           generation.generatedAssets.length > 0 && (

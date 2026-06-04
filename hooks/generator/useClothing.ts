@@ -1,13 +1,20 @@
 import { useState, type ChangeEvent } from 'react';
 
 export function useClothing() {
-  const [zipFile, setZipFile] = useState<File | null>(null);
+  const [frontDesign, setFrontDesign] = useState<File | null>(null);
+  const [backDesign, setBackDesign] = useState<File | null>(null);
 
-  const handleZipUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFrontUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) setZipFile(file);
+    if (file) setFrontDesign(file);
     event.target.value = '';
   };
 
-  return { zipFile, handleZipUpload };
+  const handleBackUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) setBackDesign(file);
+    event.target.value = '';
+  };
+
+  return { frontDesign, backDesign, handleFrontUpload, handleBackUpload };
 }
