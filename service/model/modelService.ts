@@ -2,6 +2,7 @@ import { getJwtToken } from "@/service/auth/auth_service";
 import type { Model } from "@/types/types";
 
 interface BackendModel {
+  id: number;
   name: string;
   gender: "MALE" | "FEMALE" | "X";
   front: string;
@@ -9,6 +10,8 @@ interface BackendModel {
   side: string;
   coverImage?: string;
 }
+
+type BackendModelRequest = Omit<BackendModel, "id">;
 
 function fromBackendGender(
   g: "MALE" | "FEMALE" | "X",
@@ -22,12 +25,9 @@ function toBackendGender(
   return g === "male" ? "MALE" : "FEMALE";
 }
 
-function toFrontend(
-  model: BackendModel,
-  index: number,
-): Model {
+function toFrontend(model: BackendModel): Model {
   return {
-    id: index,
+    id: model.id,
     name: model.name,
     gender: fromBackendGender(model.gender),
     profilePicture: model.coverImage ?? model.front,
@@ -43,7 +43,7 @@ function toFrontend(
 
 function toBackend(
   model: Omit<Model, "id" | "selected">,
-): BackendModel {
+): BackendModelRequest {
   const profileIsCustom =
     model.profilePicture &&
     model.profilePicture !== model.photos?.front;
@@ -83,12 +83,12 @@ class ModelService {
     if (!response.ok)
       throw new Error("Failed to fetch models");
     const data: BackendModel[] = await response.json();
-    return data.map((m, i) => toFrontend(m, i + 1));
+    return data.map((m) => toFrontend(m));
   }
 
   async createModel(
     model: Omit<Model, "id" | "selected">,
-  ): Promise<void> {
+  ): Promise<number> {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/model`,
       {
@@ -99,6 +99,8 @@ class ModelService {
     );
     if (!response.ok)
       throw new Error("Failed to create model");
+    const created: BackendModel = await response.json();
+    return created.id;
   }
 
   async updateModel(
@@ -117,7 +119,6 @@ class ModelService {
       throw new Error("Failed to update model");
   }
 
-  // Requires backend to expose id (remove @JsonIgnore from Model entity).
   async deleteModel(id: number): Promise<void> {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/model/${id}`,

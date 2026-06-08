@@ -149,7 +149,7 @@ export function AdvancedSettings({
           Prompt
         </h3>
         <TextField
-          placeholder="A professional cycling athlete wearing the outfit, photographed in a modern studio with clean white background, dramatic side lighting, sharp focus, photorealistic quality."
+          placeholder="Optional styling tweaks only, e.g. “tuck in the jersey” or “remove gloves”. Leave empty to keep the model and pose exactly as uploaded."
           multiline
           minRows={3}
           maxRows={6}
@@ -181,9 +181,9 @@ export function AdvancedSettings({
           }}
         />
         <p className="text-xs text-gray-400 mt-2">
-          Edit or extend the default prompt to refine the
-          fit on the model. Pre-configured poses and
-          lighting are applied on top.
+          The model and pose from the uploaded photo are kept as-is.
+          Use this only for small styling adjustments — leave it empty
+          for a faithful try-on.
         </p>
       </div>
     </div>

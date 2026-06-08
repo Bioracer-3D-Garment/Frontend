@@ -37,10 +37,11 @@ export function useModels() {
     });
   };
 
-  const addModel = async (model: Omit<Model, 'id' | 'selected'>) => {
-    await modelService.createModel(model);
+  const addModel = async (model: Omit<Model, 'id' | 'selected'>): Promise<number> => {
+    const newId = await modelService.createModel(model);
     const selectedIds = models.filter((m) => m.selected).map((m) => m.id);
     await fetchModels(selectedIds);
+    return newId;
   };
 
   const updateModel = async (id: number, updates: Partial<Omit<Model, 'id'>>) => {

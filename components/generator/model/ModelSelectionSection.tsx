@@ -11,7 +11,7 @@ interface ModelSelectionSectionProps {
   selectedModels: Model[];
   subtitle?: string;
   onToggleModel: (id: number) => void;
-  onAddModel: (model: Omit<Model, 'id' | 'selected'>) => Promise<void>;
+  onAddModel: (model: Omit<Model, 'id' | 'selected'>) => Promise<number>;
   onUpdateModel: (id: number, updates: Partial<Omit<Model, 'id'>>) => Promise<void>;
   onDeleteModel: (id: number) => Promise<void>;
 }

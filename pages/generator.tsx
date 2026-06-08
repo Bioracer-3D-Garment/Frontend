@@ -58,12 +58,11 @@ export default function GeneratorPage() {
     }>({
       resolution: "2k",
       frameOutputFormat: "png",
-      prompt:
-        "Full body studio photo of a young adult male model, slim athletic build, " +
-        "short brown hair, neutral confident expression, standing straight with " +
-        "arms relaxed at the sides, slight weight on one leg. Clean light grey " +
-        "studio background with soft floor shadow. Soft even studio lighting, " +
-        "sharp and clean, professional sportswear lookbook style.",
+      // Fashn tryon-max preserves the model's identity and pose from the input image.
+      // The `prompt` is only for small styling tweaks (e.g. "tuck in shirt"), NOT a
+      // model/scene description — a generative prompt makes it regenerate the person
+      // and normalise the pose to front. Default to empty so the uploaded pose is kept.
+      prompt: "",
     });
 
   const [videoOptions, setVideoOptions] =
