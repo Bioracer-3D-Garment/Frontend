@@ -38,12 +38,7 @@ export interface ProjectAssetsPage {
 
 export interface BatchStatus {
   jobId: string;
-  status:
-    | "PENDING"
-    | "RUNNING"
-    | "DONE"
-    | "PARTIAL"
-    | "FAILED";
+  status: "PENDING" | "RUNNING" | "DONE" | "PARTIAL" | "FAILED";
   completed: number;
   total: number;
   uploadedCount: number;
@@ -106,7 +101,7 @@ export interface ProjectUser {
 }
 
 export interface Project {
-  id: number;
+  id?: number;
   name: string;
   coverImage: string;
   user?: ProjectUser;

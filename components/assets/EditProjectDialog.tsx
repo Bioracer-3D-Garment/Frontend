@@ -58,10 +58,12 @@ export function EditProjectDialog({
           <p className="text-sm text-gray-500">Preview:</p>
           <div className="mt-2 bg-gray-50 border border-gray-200 rounded-md overflow-hidden">
             {projectImageTag ? (
-              <CldImage
-                width="300"
-                height="300"
-                src={projectImageTag}
+              <img
+                src={
+                  process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                  "/" +
+                  projectImageTag
+                }
                 alt="Cover preview"
                 className="w-full h-56 object-cover"
               />
@@ -73,11 +75,7 @@ export function EditProjectDialog({
           </div>
         </div>
 
-        
-
-        {saveError && (
-          <p className="text-red-600 text-sm mt-3">{saveError}</p>
-        )}
+        {saveError && <p className="text-red-600 text-sm mt-3">{saveError}</p>}
 
         <div className="flex items-center justify-between mt-6">
           <button

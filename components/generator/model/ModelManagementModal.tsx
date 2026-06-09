@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useRef } from "react";
 import {
   Dialog,
@@ -21,8 +19,7 @@ import {
   Check,
 } from "@mui/icons-material";
 import type { Model, ModelPhotos } from "@/types/types";
-import { uploadImage } from "@/service/cloudinary/uploadImage";
-import { CldImage } from "next-cloudinary";
+import { uploadImage } from "@/service/UploadService/uploadImage";
 
 interface ModelManagementModalProps {
   open: boolean;
@@ -94,10 +91,8 @@ function UploadZone({
           <CircularProgress size={20} sx={{ color: "#e2001a" }} />
         ) : preview ? (
           <>
-            <CldImage
-              width={400}
-              height={400}
-              src={preview}
+            <img
+              src={process.env.NEXT_PUBLIC_PYTHON_SERVER_URL + "/" + preview}
               alt={label}
               className="h-full w-full rounded-xl object-cover"
             />
@@ -374,10 +369,12 @@ export function ModelManagementModal({
                   </div>
 
                   <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-200 ring-1 ring-black/5">
-                    <CldImage
-                      width={200}
-                      height={200}
-                      src={model.profilePicture}
+                    <img
+                      src={
+                        process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                        "/" +
+                        model.profilePicture
+                      }
                       alt={model.name}
                       className="h-full w-full object-cover"
                     />

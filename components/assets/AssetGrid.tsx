@@ -62,9 +62,6 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                 className="group bg-white border border-gray-200 hover:border-black transition-all rounded overflow-hidden"
               >
                 <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                  {/* Use the backend-provided URL (it embeds the correct Cloudinary
-                      cloud + version). CldImage + publicId would rebuild the URL from
-                      the frontend's hardcoded cloud name and resolve the wrong image. */}
                   {asset.type === "video" ? (
                     <video
                       src={asset.secureUrl}
@@ -76,7 +73,11 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={asset.thumbnail || asset.secureUrl}
+                      src={
+                        process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                        "/" +
+                        asset.publicId
+                      }
                       alt={`${garmentName} ${asset.model}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
