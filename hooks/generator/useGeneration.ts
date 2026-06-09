@@ -1,120 +1,266 @@
-import { useState, useRef } from 'react';
-import { useRouter } from 'next/router';
-import type { GeneratorStatus, GeneratedAsset, Resolution, FrameFormat, FrameOutputFormat } from '@/types/types';
-import BatchService from '@/service/batch/batchService';
+import { useState, useRef } from "react";
+import { useRouter } from "next/router";
+import type {
+  GeneratorStatus,
+  GeneratedAsset,
+  Resolution,
+  FrameOutputFormat,
+  VideoOptions,
+  BatchStatus,
+} from "@/types/types";
+import BatchService from "@/service/batch/batchService";
+import VideoService from "@/service/video/videoService";
 
 const batchService = new BatchService();
+const videoService = new VideoService();
 const POLL_INTERVAL_MS = 5000;
 
 interface UseGenerationParams {
-	zipFile: File | null;
-	selectedGender: string | null;
-	selectedProjectName: string;
-	selectedProjectId: number | null;
+  frontDesign: File | null;
+  backDesign: File | null;
+  selectedModelId: number | null;
+  selectedProjectName: string;
+  selectedProjectId: number | null;
 }
 
-export function useGeneration({ zipFile, selectedGender, selectedProjectName, selectedProjectId }: UseGenerationParams) {
-	const router = useRouter();
-	const [generating, setGenerating] = useState(false);
-	const [progress, setProgress] = useState({ completed: 0, total: 0 });
-	const [status, setStatus] = useState<GeneratorStatus>({ open: false, message: '', severity: 'info' });
-	const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[] | null>(null);
-	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+function deriveProductId(filename?: string | null): string {
+  if (!filename) return "front-design";
+  let name = filename.replace(/\\/g, "/");
+  const slash = name.lastIndexOf("/");
+  if (slash >= 0) name = name.slice(slash + 1);
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(0, dot) : name;
+}
 
-	const canGenerate = zipFile !== null && selectedGender !== null && selectedProjectId !== null;
+/** "" for exactly one, "s" otherwise — for "1 asset" / "2 assets". */
+const plural = (n: number) => (n !== 1 ? "s" : "");
 
-	const stopPolling = () => {
-		if (pollRef.current) {
-			clearInterval(pollRef.current);
-			pollRef.current = null;
-		}
-	};
+const errMsg = (err: unknown, fallback = "unknown error") =>
+  err instanceof Error ? err.message : fallback;
 
-	const handleGenerate = async (options?: {
-		resolution?: Resolution;
-		frameFormat?: FrameFormat;
-		frameOutputFormat?: FrameOutputFormat;
-		prompt?: string;
-	}) => {
-		setGenerating(true);
-		setGeneratedAssets(null);
-		setProgress({ completed: 0, total: 0 });
-		setStatus({ open: true, message: 'Starting batch…', severity: 'info' });
+export function useGeneration({
+  frontDesign,
+  backDesign,
+  selectedModelId,
+  selectedProjectName,
+  selectedProjectId,
+}: UseGenerationParams) {
+  const router = useRouter();
+  const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState({
+    completed: 0,
+    total: 0,
+  });
+  const [status, setStatus] = useState<GeneratorStatus>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+  const [generatedAssets, setGeneratedAssets] = useState<
+    GeneratedAsset[] | null
+  >(null);
+  const pollRef = useRef<ReturnType<
+    typeof setInterval
+  > | null>(null);
 
-		let jobId: string;
-		try {
-				const result = await batchService.startBatch({
-					garmentZip: zipFile!,
-					gender: selectedGender!,
-					folderId: selectedProjectId!,
-					options,
-				});
-			jobId = result.jobId;
-		} catch (err) {
-			setGenerating(false);
-			setStatus({
-				open: true,
-				message: err instanceof Error ? err.message : 'Failed to start batch. Please try again.',
-				severity: 'error',
-			});
-			return;
-		}
+  const canGenerate =
+    frontDesign !== null &&
+    backDesign !== null &&
+    selectedModelId !== null &&
+    selectedProjectId !== null;
 
-		setStatus({ open: true, message: `Generating "${zipFile!.name}" with ${selectedGender} model…`, severity: 'info' });
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
 
-		pollRef.current = setInterval(async () => {
-			try {
-				const batchStatus = await batchService.getBatchStatus(jobId);
-				setProgress({ completed: batchStatus.completed, total: batchStatus.total });
+  const pollJobUntilTerminal = (jobId: string): Promise<BatchStatus> =>
+    new Promise((resolve, reject) => {
+      pollRef.current = setInterval(async () => {
+        try {
+          const batchStatus =
+            await batchService.getBatchStatus(jobId);
+          setProgress({
+            completed: batchStatus.completed,
+            total: batchStatus.total,
+          });
+          if (
+            batchStatus.status === "DONE" ||
+            batchStatus.status === "PARTIAL" ||
+            batchStatus.status === "FAILED"
+          ) {
+            stopPolling();
+            resolve(batchStatus);
+          }
+        } catch (err) {
+          stopPolling();
+          reject(err);
+        }
+      }, POLL_INTERVAL_MS);
+    });
 
-				if (batchStatus.status === 'DONE') {
-					stopPolling();
-					setGenerating(false);
-					setGeneratedAssets(batchStatus.assets);
-					setStatus({
-						open: true,
-						message: `${batchStatus.uploadedCount} asset${batchStatus.uploadedCount !== 1 ? 's' : ''} generated in "${selectedProjectName}". Click to view.`,
-						severity: 'success',
-					});
-					setProgress({ completed: 0, total: 0 });
-				} else if (batchStatus.status === 'PARTIAL') {
-					stopPolling();
-					setGenerating(false);
-					setGeneratedAssets(batchStatus.assets);
-					const failCount = batchStatus.failedItems.length;
-					setStatus({
-						open: true,
-						message: `${batchStatus.uploadedCount} asset${batchStatus.uploadedCount !== 1 ? 's' : ''} generated with ${failCount} failure${failCount !== 1 ? 's' : ''}. Click to view.`,
-						severity: 'warning',
-					});
-					setProgress({ completed: 0, total: 0 });
-				} else if (batchStatus.status === 'FAILED') {
-					stopPolling();
-					setGenerating(false);
-					const failCount = batchStatus.failedItems.length;
-					setStatus({
-						open: true,
-						message: `Batch failed: ${failCount} combinations could not be generated after retries.`,
-						severity: 'error',
-					});
-					setProgress({ completed: 0, total: 0 });
-				}
-			} catch {
-				stopPolling();
-				setGenerating(false);
-				setStatus({ open: true, message: 'Lost connection while checking batch progress.', severity: 'error' });
-				setProgress({ completed: 0, total: 0 });
-			}
-		}, POLL_INTERVAL_MS);
-	};
+  // Ends the run with a snackbar message; resets the progress bar. Used for both errors
+  // (severity "error") and soft failures like a missing video (severity "warning").
+  const finish = (
+    message: string,
+    severity: GeneratorStatus["severity"],
+  ) => {
+    setGenerating(false);
+    setProgress({ completed: 0, total: 0 });
+    setStatus({ open: true, message, severity });
+  };
 
-	const handleSnackbarClick = () => {
-		if (status.severity === 'success' || status.severity === 'warning') {
-			router.push(selectedProjectId ? `/assets?projectId=${selectedProjectId}` : '/assets');
-		}
-	};
+  const handleGenerate = async (
+    options?: {
+      resolution?: Resolution;
+      frameOutputFormat?: FrameOutputFormat;
+      prompt?: string;
+    },
+    video?: VideoOptions,
+  ) => {
+    setGenerating(true);
+    setGeneratedAssets(null);
+    setProgress({ completed: 0, total: 0 });
+    setStatus({ open: true, message: "Starting batch…", severity: "info" });
 
-	const closeStatus = () => setStatus((s) => ({ ...s, open: false }));
+    // ---- 1. Start + poll the image batch ----
+    let imageJobId: string;
+    let imageStatus: BatchStatus;
+    try {
+      ({ jobId: imageJobId } = await batchService.startBatch({
+        frontDesign: frontDesign!,
+        backDesign: backDesign!,
+        modelId: selectedModelId!,
+        folderId: selectedProjectId!,
+        options,
+      }));
+    } catch (err) {
+      return finish(
+        errMsg(err, "Failed to start batch. Please try again."),
+        "error",
+      );
+    }
 
-	return { generating, progress, canGenerate, handleGenerate, status, closeStatus, handleSnackbarClick, generatedAssets };
+    setStatus({
+      open: true,
+      message: "Generating garment assets…",
+      severity: "info",
+    });
+
+    try {
+      imageStatus = await pollJobUntilTerminal(imageJobId);
+    } catch {
+      return finish(
+        "Lost connection while checking batch progress.",
+        "error",
+      );
+    }
+
+    if (imageStatus.status === "FAILED") {
+      const detail =
+        imageStatus.errorMessage ?? imageStatus.failedItems[0]?.reason;
+      return finish(
+        `Batch failed: ${imageStatus.failedItems.length} combinations could not be generated after retries.${detail ? ` (${detail})` : ""}`,
+        "error",
+      );
+    }
+
+    // Images are available (DONE or PARTIAL).
+    setGeneratedAssets(imageStatus.assets);
+    const imageCount = imageStatus.uploadedCount;
+    const images = `${imageCount} image asset${plural(imageCount)}`;
+
+    // ---- 2. Optionally generate the turntable video ----
+    if (!video?.enabled) {
+      if (imageStatus.status === "PARTIAL") {
+        const fails = imageStatus.failedItems.length;
+        return finish(
+          `${imageCount} asset${plural(imageCount)} generated with ${fails} failure${plural(fails)}. Click to view.`,
+          "warning",
+        );
+      }
+      return finish(
+        `${imageCount} asset${plural(imageCount)} generated in "${selectedProjectName}". Click to view.`,
+        "success",
+      );
+    }
+
+    setStatus({
+      open: true,
+      message: "Generating turntable video…",
+      severity: "info",
+    });
+
+    let videoJobId: string;
+    let videoStatus: BatchStatus;
+    try {
+      ({ jobId: videoJobId } = await videoService.startVideo({
+        imageJobId,
+        productId: deriveProductId(frontDesign?.name),
+        folderId: selectedProjectId!,
+        durationSeconds: video.durationSeconds,
+        prompt: video.prompt,
+      }));
+    } catch (err) {
+      return finish(
+        `${images} generated, but the video failed to start: ${errMsg(err)}`,
+        "warning",
+      );
+    }
+
+    try {
+      videoStatus = await pollJobUntilTerminal(videoJobId);
+    } catch {
+      return finish(
+        "Lost connection while checking video progress.",
+        "error",
+      );
+    }
+
+    if (videoStatus.status === "DONE" && videoStatus.assets) {
+      setGeneratedAssets((prev) => [
+        ...(prev ?? []),
+        ...videoStatus.assets!,
+      ]);
+      return finish(
+        `${images} + video generated in "${selectedProjectName}". Click to view.`,
+        "success",
+      );
+    }
+
+    const reason =
+      videoStatus.errorMessage ??
+      videoStatus.failedItems[0]?.reason ??
+      "unknown error";
+    return finish(`${images} generated, but the video failed: ${reason}`, "warning");
+  };
+
+  const handleSnackbarClick = () => {
+    if (
+      status.severity === "success" ||
+      status.severity === "warning"
+    ) {
+      router.push(
+        selectedProjectId
+          ? `/assets?projectId=${selectedProjectId}`
+          : "/assets",
+      );
+    }
+  };
+
+  const closeStatus = () =>
+    setStatus((s) => ({ ...s, open: false }));
+
+  return {
+    generating,
+    progress,
+    canGenerate,
+    handleGenerate,
+    status,
+    closeStatus,
+    handleSnackbarClick,
+    generatedAssets,
+  };
 }

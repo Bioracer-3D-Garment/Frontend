@@ -26,7 +26,7 @@ interface ModelManagementModalProps {
   models: Model[];
   onClose: () => void;
   onToggle: (id: number) => void;
-  onAdd: (model: Omit<Model, "id" | "selected">) => Promise<void>;
+  onAdd: (model: Omit<Model, "id" | "selected">) => Promise<number>;
   onUpdate: (id: number, updates: Partial<Omit<Model, "id">>) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
 }
@@ -150,7 +150,9 @@ export function ModelManagementModal({
   onDelete,
 }: ModelManagementModalProps) {
   const [view, setView] = useState<"list" | "form">("list");
+  const [formStep, setFormStep] = useState<1 | 2>(1);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isNewModelPending, setIsNewModelPending] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -169,6 +171,7 @@ export function ModelManagementModal({
   const openAdd = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setFormStep(1);
     setSubmitAttempted(false);
     setSaveError(null);
     setView("form");
@@ -194,13 +197,24 @@ export function ModelManagementModal({
     setView("form");
   };
 
-  const handleBack = () => {
+  const resetForm = () => {
+    setIsNewModelPending(false);
     setView("list");
+    setFormStep(1);
     setEditingId(null);
     setForm(emptyForm);
     setSubmitAttempted(false);
     setSaveError(null);
     setUploadingSlots(new Set());
+  };
+
+  const handleBack = () => {
+    // If the model was created in step 1 but the user cancels before completing
+    // step 2, delete the incomplete record so it doesn't linger in the DB.
+    if (isNewModelPending && editingId !== null) {
+      onDelete(editingId).catch(() => {});
+    }
+    resetForm();
   };
 
   const handleClose = () => {
@@ -220,11 +234,11 @@ export function ModelManagementModal({
     setUploadingSlots((prev) => new Set(prev).add(slot));
     try {
       const pose = slot === "profilePhoto" ? "coverImage" : slot;
-      const secureUrl = await uploadImage(file, pose, editingId ?? undefined);
+      const publicId = await uploadImage(file, pose, editingId ?? undefined);
       if (slot === "profilePhoto") {
-        setForm((f) => ({ ...f, profilePhoto: secureUrl }));
+        setForm((f) => ({ ...f, profilePhoto: publicId }));
       } else {
-        setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: secureUrl } }));
+        setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: publicId } }));
       }
     } catch {
       // Upload failed — clear the slot so the user can retry
@@ -242,17 +256,43 @@ export function ModelManagementModal({
     }
   };
 
-  const isFormValid =
-    form.name.trim() &&
-    form.photos.front &&
-    form.photos.back &&
-    form.photos.side;
+  const photosValid = !!(form.photos.front && form.photos.back && form.photos.side);
+  // step 1 (add, no editingId yet): only name needed; step 2 or edit: name + all photos
+  const isFormValid = editingId !== null
+    ? !!(form.name.trim()) && photosValid
+    : !!(form.name.trim());
 
   const showNameError = submitAttempted && !form.name.trim();
 
+  // create the model record to get its real DB id, then advance.
+  const handleCreate = async () => {
+    setSubmitAttempted(true);
+    if (!form.name.trim()) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const newId = await onAdd({
+        name: form.name.trim(),
+        gender: form.gender,
+        profilePicture: "",
+        photos: { front: "", back: "", side: "" },
+        isCustom: true,
+      });
+      setEditingId(newId);
+      setIsNewModelPending(true);
+      setSubmitAttempted(false);
+      setFormStep(2);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // save photos + details via PUT.
   const handleSave = async () => {
     setSubmitAttempted(true);
-    if (!isFormValid || anyUploading) return;
+    if (!isFormValid || anyUploading || editingId === null) return;
     setSaving(true);
     setSaveError(null);
     try {
@@ -262,23 +302,13 @@ export function ModelManagementModal({
         side: form.photos.side!,
       };
       const profilePicture = form.profilePhoto ?? photos.front;
-      if (editingId !== null) {
-        await onUpdate(editingId, {
-          name: form.name.trim(),
-          gender: form.gender,
-          profilePicture,
-          photos,
-        });
-      } else {
-        await onAdd({
-          name: form.name.trim(),
-          gender: form.gender,
-          profilePicture,
-          photos,
-          isCustom: true,
-        });
-      }
-      handleBack();
+      await onUpdate(editingId, {
+        name: form.name.trim(),
+        gender: form.gender,
+        profilePicture,
+        photos,
+      });
+      resetForm();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -301,9 +331,11 @@ export function ModelManagementModal({
         )}
         {view === "list"
           ? "Models"
-          : editingId !== null
-            ? "Edit model"
-            : "Add model"}
+          : isNewModelPending
+            ? "Add model — Photos"
+            : editingId !== null
+              ? "Edit model"
+              : "Add model"}
       </DialogTitle>
 
       <DialogContent className="!pt-2">
@@ -396,85 +428,104 @@ export function ModelManagementModal({
           </div>
         ) : (
           <div className="flex flex-col gap-5 pt-1">
-            {/* Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Name
-              </label>
-              <input
-                autoFocus
-                type="text"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                placeholder="Model name"
-                className={`w-full rounded-xl border-2 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:bg-white focus:border-[#e2001a] ${
-                  showNameError
-                    ? "border-[#e2001a]"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              />
-              {showNameError && (
-                <span className="text-xs text-[#e2001a]">Name is required</span>
-              )}
-            </div>
-
-            {/* Gender */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Gender
-              </span>
-              <ToggleButtonGroup
-                value={form.gender}
-                exclusive
-                onChange={(_, val) =>
-                  val && setForm((f) => ({ ...f, gender: val }))
-                }
-                size="small"
-              >
-                <ToggleButton
-                  value="female"
-                  className={`!px-6 !text-sm !font-semibold ${form.gender === "female" ? "!bg-[#e2001a] !text-white" : ""}`}
-                >
-                  Female
-                </ToggleButton>
-                <ToggleButton
-                  value="male"
-                  className={`!px-6 !text-sm !font-semibold ${form.gender === "male" ? "!bg-[#e2001a] !text-white" : ""}`}
-                >
-                  Male
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            {/* Photos */}
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Photos
-              </span>
-              <div className="grid grid-cols-4 gap-3">
-                <UploadZone
-                  label="Cover photo"
-                  optional
-                  preview={form.profilePhoto ?? form.photos.front}
-                  uploading={uploadingSlots.has("profilePhoto")}
-                  onFileSelected={handlePhotoFile("profilePhoto")}
-                />
-                {(["front", "back", "side"] as const).map((key) => (
-                  <UploadZone
-                    key={key}
-                    label={key.charAt(0).toUpperCase() + key.slice(1)}
-                    preview={form.photos[key]}
-                    uploading={uploadingSlots.has(key)}
-                    onFileSelected={handlePhotoFile(key)}
-                  />
-                ))}
+            {/* Step indicator for add mode */}
+            {(editingId === null || isNewModelPending) && (
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span className={!isNewModelPending ? "font-bold text-[#e2001a]" : ""}>
+                  1. Details
+                </span>
+                <span>→</span>
+                <span className={isNewModelPending ? "font-bold text-[#e2001a]" : ""}>
+                  2. Photos
+                </span>
               </div>
-              {anyUploading && (
-                <p className="text-xs text-gray-400">Uploading photos…</p>
-              )}
-            </div>
+            )}
+
+            {/* Name — visible in step 1 (add, editingId null) or edit (!isNewModelPending) */}
+            {(!isNewModelPending) && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Name
+                </label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  placeholder="Model name"
+                  className={`w-full rounded-xl border-2 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:bg-white focus:border-[#e2001a] ${
+                    showNameError
+                      ? "border-[#e2001a]"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                />
+                {showNameError && (
+                  <span className="text-xs text-[#e2001a]">Name is required</span>
+                )}
+              </div>
+            )}
+
+            {/* Gender — visible in step 1 (add, editingId null) or edit (!isNewModelPending) */}
+            {(!isNewModelPending) && (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Gender
+                </span>
+                <ToggleButtonGroup
+                  value={form.gender}
+                  exclusive
+                  onChange={(_, val) =>
+                    val && setForm((f) => ({ ...f, gender: val }))
+                  }
+                  size="small"
+                >
+                  <ToggleButton
+                    value="female"
+                    className={`!px-6 !text-sm !font-semibold ${form.gender === "female" ? "!bg-[#e2001a] !text-white" : ""}`}
+                  >
+                    Female
+                  </ToggleButton>
+                  <ToggleButton
+                    value="male"
+                    className={`!px-6 !text-sm !font-semibold ${form.gender === "male" ? "!bg-[#e2001a] !text-white" : ""}`}
+                  >
+                    Male
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </div>
+            )}
+
+            {/* Photos — visible in step 2 (isNewModelPending) or edit (editingId set, not pending) */}
+            {(editingId !== null) && (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Photos
+                </span>
+                <div className="grid grid-cols-4 gap-3">
+                  <UploadZone
+                    label="Cover photo"
+                    optional
+                    preview={form.profilePhoto ?? form.photos.front}
+                    uploading={uploadingSlots.has("profilePhoto")}
+                    onFileSelected={handlePhotoFile("profilePhoto")}
+                  />
+                  {(["front", "back", "side"] as const).map((key) => (
+                    <UploadZone
+                      key={key}
+                      label={key.charAt(0).toUpperCase() + key.slice(1)}
+                      preview={form.photos[key]}
+                      uploading={uploadingSlots.has(key)}
+                      onFileSelected={handlePhotoFile(key)}
+                    />
+                  ))}
+                </div>
+                {anyUploading && (
+                  <p className="text-xs text-gray-400">Uploading photos…</p>
+                )}
+              </div>
+            )}
 
             {saveError && (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[#e2001a]">
@@ -494,19 +545,38 @@ export function ModelManagementModal({
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            disabled={!isFormValid || anyUploading || saving}
-            className="!bg-[#e2001a] !text-white font-bold transition-all hover:!bg-[#b80015] hover:scale-105 disabled:!bg-gray-300 disabled:!text-gray-500"
-            startIcon={
-              saving ? (
-                <CircularProgress size={14} sx={{ color: "white" }} />
-              ) : undefined
-            }
-          >
-            {editingId !== null ? "Save" : "Add"}
-          </Button>
+
+          {/* Step 1 (add mode): Create makes the DB record and advances */}
+          {editingId === null && formStep === 1 ? (
+            <Button
+              onClick={handleCreate}
+              variant="contained"
+              disabled={saving}
+              className="!bg-[#e2001a] !text-white font-bold transition-all hover:!bg-[#b80015] hover:scale-105"
+              startIcon={
+                saving ? (
+                  <CircularProgress size={14} sx={{ color: "white" }} />
+                ) : undefined
+              }
+            >
+              Next
+            </Button>
+          ) : (
+            /* Step 2 (add) or any edit: Save/Add button */
+            <Button
+              onClick={handleSave}
+              variant="contained"
+              disabled={!isFormValid || anyUploading || saving}
+              className="!bg-[#e2001a] !text-white font-bold transition-all hover:!bg-[#b80015] hover:scale-105 disabled:!bg-gray-300 disabled:!text-gray-500"
+              startIcon={
+                saving ? (
+                  <CircularProgress size={14} sx={{ color: "white" }} />
+                ) : undefined
+              }
+            >
+              {isNewModelPending ? "Add" : "Save"}
+            </Button>
+          )}
         </DialogActions>
       ) : (
         <DialogActions className="px-6 pb-6">
