@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Typography, IconButton } from "@mui/material";
-import { Download, Delete } from "@mui/icons-material";
+import { Download, Delete, ZoomIn } from "@mui/icons-material";
 import type { Asset } from "@/types/types";
+import { AssetPreviewDialog } from "./AssetPreviewDialog";
 
 interface AssetGridProps {
   assets: Asset[];
@@ -18,6 +20,8 @@ function groupByGarment(assets: Asset[]): Map<string, Asset[]> {
 }
 
 export function AssetGrid({ assets, onDelete }: AssetGridProps) {
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+
   const handleDownload = async (asset: Asset) => {
     const response = await fetch(asset.secureUrl);
     const blob = await response.blob();
@@ -40,7 +44,8 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
   }
 
   return (
-    <div className="space-y-10">
+    <>
+      <div className="space-y-10">
       {[...byGarment.entries()].map(([garmentName, garmentAssets]) => (
         <div key={garmentName}>
           <div className="flex items-center gap-3 mb-4">
@@ -79,17 +84,27 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                         asset.publicId
                       }
                       alt={`${garmentName} ${asset.model}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onClick={() => setPreviewIndex(assets.indexOf(asset))}
+                      className="w-full h-full object-cover cursor-zoom-in group-hover:scale-105 transition-transform duration-500"
                     />
                   )}
                   <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-0.5 rounded-full capitalize tracking-wider">
                     {asset.model}
                   </div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 pointer-events-none">
+                    <IconButton
+                      onClick={() => setPreviewIndex(assets.indexOf(asset))}
+                      size="small"
+                      aria-label="Preview asset"
+                      className="!bg-white hover:!bg-[#e2001a] hover:!text-white !pointer-events-auto"
+                    >
+                      <ZoomIn fontSize="small" />
+                    </IconButton>
                     <IconButton
                       onClick={() => handleDownload(asset)}
                       size="small"
-                      className="!bg-white hover:!bg-[#e2001a] hover:!text-white"
+                      aria-label="Download asset"
+                      className="!bg-white hover:!bg-[#e2001a] hover:!text-white !pointer-events-auto"
                     >
                       <Download fontSize="small" />
                     </IconButton>
@@ -97,7 +112,8 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                       <IconButton
                         onClick={() => onDelete(asset.id)}
                         size="small"
-                        className="!bg-white hover:!bg-[#b80015] hover:!text-white"
+                        aria-label="Delete asset"
+                        className="!bg-white hover:!bg-[#b80015] hover:!text-white !pointer-events-auto"
                       >
                         <Delete fontSize="small" />
                       </IconButton>
@@ -117,6 +133,15 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
           </div>
         </div>
       ))}
-    </div>
+      </div>
+
+      <AssetPreviewDialog
+        assets={assets}
+        index={previewIndex}
+        onClose={() => setPreviewIndex(null)}
+        onNavigate={setPreviewIndex}
+        onDownload={handleDownload}
+      />
+    </>
   );
 }
