@@ -26,7 +26,7 @@ const MAX_SCALE = 5;
 const ZOOM_STEP = 0.25;
 
 function imageUrl(asset: Asset): string {
-  return `${process.env.NEXT_PUBLIC_PYTHON_SERVER_URL}/${asset.publicId}`;
+  return `${process.env.NEXT_PUBLIC_PYTHON_SERVER_URL}/files/${asset.publicId}`;
 }
 
 function clampScale(value: number): number {
@@ -93,27 +93,24 @@ export function AssetPreviewDialog({
 
   // Zoom around a focal point (relative to the viewport center) so the pixel
   // under the cursor stays put. When no point is given, zoom around the center.
-  const zoomBy = useCallback(
-    (delta: number, focalX = 0, focalY = 0) => {
-      setScale((prevScale) => {
-        const nextScale = clampScale(prevScale + delta);
-        if (nextScale === prevScale) return prevScale;
-        if (nextScale === 1) {
-          setOffset({ x: 0, y: 0 });
-          return nextScale;
-        }
-        setOffset((prevOffset) => {
-          const ratio = nextScale / prevScale;
-          return {
-            x: focalX - ratio * (focalX - prevOffset.x),
-            y: focalY - ratio * (focalY - prevOffset.y),
-          };
-        });
+  const zoomBy = useCallback((delta: number, focalX = 0, focalY = 0) => {
+    setScale((prevScale) => {
+      const nextScale = clampScale(prevScale + delta);
+      if (nextScale === prevScale) return prevScale;
+      if (nextScale === 1) {
+        setOffset({ x: 0, y: 0 });
         return nextScale;
+      }
+      setOffset((prevOffset) => {
+        const ratio = nextScale / prevScale;
+        return {
+          x: focalX - ratio * (focalX - prevOffset.x),
+          y: focalY - ratio * (focalY - prevOffset.y),
+        };
       });
-    },
-    [],
-  );
+      return nextScale;
+    });
+  }, []);
 
   // Attach the wheel-to-zoom listener via a callback ref so it binds exactly
   // when the viewport node mounts inside MUI's Dialog portal. A native,
