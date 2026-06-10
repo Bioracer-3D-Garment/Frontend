@@ -28,12 +28,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    const extension =
-      asset.type === "video"
-        ? "mp4"
-        : (asset.secureUrl.split(".").pop() ?? "jpg").split(/[?#]/)[0];
-
-    a.download = `${asset.publicId}.${extension}`;
+    a.download = asset.publicId;
     a.click();
     URL.revokeObjectURL(objectUrl);
   };
