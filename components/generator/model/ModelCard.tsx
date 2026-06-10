@@ -1,7 +1,6 @@
 import { Typography } from "@mui/material";
 import { Check } from "@mui/icons-material";
 import type { Model } from "@/types/types";
-import { CldImage } from "next-cloudinary";
 
 interface ModelCardProps {
   model: Model;
@@ -30,7 +29,7 @@ export default function ModelCard({ model, onToggle }: ModelCardProps) {
         <img
           src={
             process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
-            "/" +
+            "/files/" +
             model.profilePicture
           }
           alt={model.name}

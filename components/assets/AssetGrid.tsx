@@ -75,7 +75,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                     <img
                       src={
                         process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
-                        "/" +
+                        "/files/" +
                         asset.publicId
                       }
                       alt={`${garmentName} ${asset.model}`}

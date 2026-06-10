@@ -1,7 +1,6 @@
 import { Typography } from "@mui/material";
 import { Edit as EditIcon } from "@mui/icons-material";
 import type { Project } from "@/types/types";
-import { CldImage } from "next-cloudinary";
 
 interface ProjectGridProps {
   projects: Project[];
@@ -39,7 +38,7 @@ export function ProjectGrid({
               <img
                 src={
                   process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
-                  "/" +
+                  "/files/" +
                   project.coverImage
                 }
                 alt={project.name}

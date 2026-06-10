@@ -92,7 +92,9 @@ function UploadZone({
         ) : preview ? (
           <>
             <img
-              src={process.env.NEXT_PUBLIC_PYTHON_SERVER_URL + "/" + preview}
+              src={
+                process.env.NEXT_PUBLIC_PYTHON_SERVER_URL + "/files/" + preview
+              }
               alt={label}
               className="h-full w-full rounded-xl object-cover"
             />
@@ -256,11 +258,14 @@ export function ModelManagementModal({
     }
   };
 
-  const photosValid = !!(form.photos.front && form.photos.back && form.photos.side);
+  const photosValid = !!(
+    form.photos.front &&
+    form.photos.back &&
+    form.photos.side
+  );
   // step 1 (add, no editingId yet): only name needed; step 2 or edit: name + all photos
-  const isFormValid = editingId !== null
-    ? !!(form.name.trim()) && photosValid
-    : !!(form.name.trim());
+  const isFormValid =
+    editingId !== null ? !!form.name.trim() && photosValid : !!form.name.trim();
 
   const showNameError = submitAttempted && !form.name.trim();
 
@@ -372,7 +377,7 @@ export function ModelManagementModal({
                     <img
                       src={
                         process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
-                        "/" +
+                        "/files/" +
                         model.profilePicture
                       }
                       alt={model.name}
@@ -431,18 +436,26 @@ export function ModelManagementModal({
             {/* Step indicator for add mode */}
             {(editingId === null || isNewModelPending) && (
               <div className="flex items-center gap-2 text-xs text-gray-400">
-                <span className={!isNewModelPending ? "font-bold text-[#e2001a]" : ""}>
+                <span
+                  className={
+                    !isNewModelPending ? "font-bold text-[#e2001a]" : ""
+                  }
+                >
                   1. Details
                 </span>
                 <span>→</span>
-                <span className={isNewModelPending ? "font-bold text-[#e2001a]" : ""}>
+                <span
+                  className={
+                    isNewModelPending ? "font-bold text-[#e2001a]" : ""
+                  }
+                >
                   2. Photos
                 </span>
               </div>
             )}
 
             {/* Name — visible in step 1 (add, editingId null) or edit (!isNewModelPending) */}
-            {(!isNewModelPending) && (
+            {!isNewModelPending && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Name
@@ -462,13 +475,15 @@ export function ModelManagementModal({
                   }`}
                 />
                 {showNameError && (
-                  <span className="text-xs text-[#e2001a]">Name is required</span>
+                  <span className="text-xs text-[#e2001a]">
+                    Name is required
+                  </span>
                 )}
               </div>
             )}
 
             {/* Gender — visible in step 1 (add, editingId null) or edit (!isNewModelPending) */}
-            {(!isNewModelPending) && (
+            {!isNewModelPending && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Gender
@@ -498,7 +513,7 @@ export function ModelManagementModal({
             )}
 
             {/* Photos — visible in step 2 (isNewModelPending) or edit (editingId set, not pending) */}
-            {(editingId !== null) && (
+            {editingId !== null && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Photos

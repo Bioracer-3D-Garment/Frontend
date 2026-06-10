@@ -1,5 +1,4 @@
 import { Dialog } from "@mui/material";
-import { CldImage } from "next-cloudinary";
 
 interface EditProjectDialogProps {
   open: boolean;
@@ -61,7 +60,7 @@ export function EditProjectDialog({
               <img
                 src={
                   process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
-                  "/" +
+                  "/files/" +
                   projectImageTag
                 }
                 alt="Cover preview"
