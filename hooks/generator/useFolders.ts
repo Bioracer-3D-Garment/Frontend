@@ -34,7 +34,7 @@ export function useProjects() {
 		const existing = projects.find((project) => project.name.toLowerCase() === trimmedName.toLowerCase());
 
 		if (existing) {
-			setSelectedProjectId(existing.id);
+			setSelectedProjectId(existing.id ?? null);
 			setNewProjectName('');
 			setNewProjectDialogOpen(false);
 			return;
@@ -43,7 +43,7 @@ export function useProjects() {
 		try {
 			const project = await projectService.createProject(trimmedName);
 			setProjects((currentProjects) => [...currentProjects, project]);
-			setSelectedProjectId(project.id);
+			setSelectedProjectId(project.id ?? null);
 			setNewProjectName('');
 			setNewProjectDialogOpen(false);
 		} catch {
