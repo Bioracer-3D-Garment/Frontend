@@ -27,7 +27,7 @@ export function useAssetProjects(
   const [projectService] = useState(() => injectedProjectService);
 
   const openEditDialog = (project: Project) => {
-    setEditDialog({ open: true, projectId: project.id });
+    setEditDialog({ open: true, projectId: project.id ?? null });
     setEditProject(project);
     setEditProjectName(project.name);
     seteditCoverImageTag(project.coverImage ?? "");
@@ -65,7 +65,7 @@ export function useAssetProjects(
   };
 
 const handleDelete = async () => {
-  if (!editProject) return;
+  if (!editProject || editProject.id === undefined) return;
 
   const confirmed = window.confirm(
     `Are you sure you want to delete "${editProject.name}"?`
