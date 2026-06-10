@@ -33,7 +33,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
         ? "mp4"
         : (asset.secureUrl.split(".").pop() ?? "jpg").split(/[?#]/)[0];
 
-    a.download = `${asset.clothing}_${asset.model}.${extension}`;
+    a.download = `${asset.publicId}.${extension}`;
     a.click();
     URL.revokeObjectURL(objectUrl);
   };
