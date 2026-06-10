@@ -65,7 +65,7 @@ export function useAssetProjects(
   };
 
 const handleDelete = async () => {
-  if (!editProject) return;
+  if (!editProject || editProject.id === undefined) return;
 
   const confirmed = window.confirm(
     `Are you sure you want to delete "${editProject.name}"?`
