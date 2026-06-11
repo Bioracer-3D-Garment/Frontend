@@ -48,11 +48,9 @@ export interface BatchStatus {
     reason: string;
   }[];
   assets: GeneratedAsset[] | null;
-  // Failure reason when status is FAILED (e.g. the video pipeline error); null otherwise.
   errorMessage?: string | null;
 }
 
-// Cloudinary public ID for each pose image of a model (front / back / side).
 export interface ModelPhotos {
   front: string;
   back: string;
@@ -62,16 +60,13 @@ export interface ModelPhotos {
 export interface Model {
   id: number;
   name: string;
-  // Cloudinary public ID of the cover image (rendered via next-cloudinary CldImage).
   profilePicture: string;
   gender: "male" | "female";
   selected: boolean;
-  // Cloudinary public IDs of the model's pose images.
   photos?: ModelPhotos;
   isCustom?: boolean;
 }
 
-// Values emitted by the model management form. Image fields are Cloudinary public IDs.
 export interface ModelFormValues {
   name: string;
   gender: "male" | "female";
@@ -118,7 +113,6 @@ export type FrameOutputFormat = "png" | "jpeg";
 
 export interface VideoOptions {
   enabled: boolean;
-  /** Clip length in seconds, 3–15 (Kling v3). */
   durationSeconds: number;
   prompt?: string;
 }

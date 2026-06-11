@@ -1,28 +1,28 @@
-import { Typography } from '@mui/material';
-import { Navbar } from '@/components/Navbar';
-import { useAuthRedirects } from '@/components/auth/useAuthRedirects';
-import { ProjectSelectorSection } from '@/components/generator/project/ProjectSelectorSection';
-import { ClothingUploadSection } from '@/components/generator/clothing/ClothingUploadSection';
-import { ModelSelectionSection } from '@/components/generator/model/ModelSelectionSection';
-import { GenerateSection } from '@/components/generator/generation/GenerateSection';
-import { ModusSelectionSection } from '@/components/generator/generation/ModusSelectionSection';
-import { GenerationFeedback } from '@/components/generator/generation/GenerationFeedback';
-import { NewProjectDialog } from '@/components/generator/project/NewProjectDialog';
-import { useProjects } from '@/hooks/generator/useFolders';
-import { useModels } from '@/hooks/generator/useModels';
-import { useGeneration } from '@/hooks/generator/useGeneration';
-import { useClothing } from '@/hooks/generator/useClothing';
-import { useState } from 'react';
-import type { Resolution, FrameOutputFormat, VideoOptions } from '@/types/types';
+import { Typography } from "@mui/material";
+import { Navbar } from "@/components/Navbar";
+import { useAuthRedirects } from "@/components/auth/useAuthRedirects";
+import { ProjectSelectorSection } from "@/components/generator/project/ProjectSelectorSection";
+import { ClothingUploadSection } from "@/components/generator/clothing/ClothingUploadSection";
+import { ModelSelectionSection } from "@/components/generator/model/ModelSelectionSection";
+import { GenerateSection } from "@/components/generator/generation/GenerateSection";
+import { ModusSelectionSection } from "@/components/generator/generation/ModusSelectionSection";
+import { GenerationFeedback } from "@/components/generator/generation/GenerationFeedback";
+import { NewProjectDialog } from "@/components/generator/project/NewProjectDialog";
+import { useProjects } from "@/hooks/generator/useFolders";
+import { useModels } from "@/hooks/generator/useModels";
+import { useGeneration } from "@/hooks/generator/useGeneration";
+import { useClothing } from "@/hooks/generator/useClothing";
+import { useState } from "react";
+import type {
+  Resolution,
+  FrameOutputFormat,
+  VideoOptions,
+} from "@/types/types";
 
 export default function GeneratorPage() {
   const { redirectToLogin } = useAuthRedirects();
-  const {
-    frontDesign,
-    backDesign,
-    handleFrontUpload,
-    handleBackUpload,
-  } = useClothing();
+  const { frontDesign, backDesign, handleFrontUpload, handleBackUpload } =
+    useClothing();
   const {
     projects,
     selectedProjectId,
@@ -50,27 +50,25 @@ export default function GeneratorPage() {
     selectedProjectId,
   });
 
-  const [generationOptions, setGenerationOptions] =
-    useState<{
-      resolution: Resolution;
-      frameOutputFormat: FrameOutputFormat;
-      prompt?: string;
-    }>({
-      resolution: "2k",
-      frameOutputFormat: "png",
-      // Fashn tryon-max preserves the model's identity and pose from the input image.
-      // The `prompt` is only for small styling tweaks (e.g. "tuck in shirt"), NOT a
-      // model/scene description — a generative prompt makes it regenerate the person
-      // and normalise the pose to front. Default to empty so the uploaded pose is kept.
-      prompt: "",
-    });
+  const [generationOptions, setGenerationOptions] = useState<{
+    resolution: Resolution;
+    frameOutputFormat: FrameOutputFormat;
+    prompt?: string;
+  }>({
+    resolution: "2k",
+    frameOutputFormat: "png",
+    // Fashn tryon-max preserves the model's identity and pose from the input image.
+    // The `prompt` is only for small styling tweaks (e.g. "tuck in shirt"), NOT a
+    // model/scene description — a generative prompt makes it regenerate the person
+    // and normalise the pose to front. Default to empty so the uploaded pose is kept.
+    prompt: "",
+  });
 
-  const [videoOptions, setVideoOptions] =
-    useState<VideoOptions>({
-      enabled: false,
-      durationSeconds: 5,
-      prompt: "",
-    });
+  const [videoOptions, setVideoOptions] = useState<VideoOptions>({
+    enabled: false,
+    durationSeconds: 5,
+    prompt: "",
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -87,19 +85,9 @@ export default function GeneratorPage() {
               ASSET GENERATOR
             </Typography>
           </div>
-          <Typography
-            variant="h3"
-            className="font-extrabold text-black mb-1"
-          >
-            Create studio-quality visuals.
-          </Typography>
-          <Typography
-            variant="body1"
-            className="text-gray-500 max-w-2xl"
-          >
-            Upload front and back views of your cycling
-            apparel, choose a model, and we&apos;ll render
-            studio-quality product images automatically.
+          <Typography variant="body1" className="text-gray-500 max-w-2xl">
+            Upload front and back views of your cycling apparel and choose a
+            model to start generating your product images.
           </Typography>
         </div>
       </div>
@@ -159,10 +147,7 @@ export default function GeneratorPage() {
           progress={generation.progress}
           canGenerate={generation.canGenerate}
           onGenerate={() =>
-            generation.handleGenerate(
-              generationOptions,
-              videoOptions,
-            )
+            generation.handleGenerate(generationOptions, videoOptions)
           }
         />
 
@@ -175,11 +160,8 @@ export default function GeneratorPage() {
                   variant="overline"
                   className="text-[#e2001a] font-bold tracking-[0.2em]"
                 >
-                  GENERATED ·{" "}
-                  {generation.generatedAssets.length} ASSET
-                  {generation.generatedAssets.length !== 1
-                    ? "S"
-                    : ""}
+                  GENERATED · {generation.generatedAssets.length} ASSET
+                  {generation.generatedAssets.length !== 1 ? "S" : ""}
                 </Typography>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2">

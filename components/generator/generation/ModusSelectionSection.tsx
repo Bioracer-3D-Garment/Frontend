@@ -33,15 +33,10 @@ export function ModusSelectionSection({
       <SectionHeader
         step="04"
         title="Settings"
-        subtitle={
-          videoValues.enabled
-            ? "Photo + Video"
-            : "Photo only"
-        }
+        subtitle={videoValues.enabled ? "Photo + Video" : "Photo only"}
       />
 
       <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
-        {/* Photo settings */}
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-5">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e2001a]">
@@ -49,14 +44,9 @@ export function ModusSelectionSection({
             </p>
           </div>
           <div className="px-6 py-6">
-            <AdvancedSettings
-              values={photoValues}
-              onChange={onPhotoChange}
-            />
+            <AdvancedSettings values={photoValues} onChange={onPhotoChange} />
           </div>
         </div>
-
-        {/* Video settings */}
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <label className="flex cursor-pointer items-center justify-between gap-4 border-b border-gray-100 px-6 py-5">
             <div className="flex items-center gap-2">
@@ -70,9 +60,7 @@ export function ModusSelectionSection({
               </span>
               <Checkbox
                 checked={videoValues.enabled}
-                onChange={(e) =>
-                  onVideoChange({ enabled: e.target.checked })
-                }
+                onChange={(e) => onVideoChange({ enabled: e.target.checked })}
                 inputProps={{
                   "aria-label": "enable video generation",
                 }}
@@ -84,10 +72,7 @@ export function ModusSelectionSection({
             </div>
           </label>
           <div className="px-6 py-6">
-            <VideoSettings
-              values={videoValues}
-              onChange={onVideoChange}
-            />
+            <VideoSettings values={videoValues} onChange={onVideoChange} />
           </div>
         </div>
       </div>

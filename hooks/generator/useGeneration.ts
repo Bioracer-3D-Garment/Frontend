@@ -32,7 +32,6 @@ function deriveProductId(filename?: string | null): string {
   return dot > 0 ? name.slice(0, dot) : name;
 }
 
-/** "" for exactly one, "s" otherwise — for "1 asset" / "2 assets". */
 const plural = (n: number) => (n !== 1 ? "s" : "");
 
 const errMsg = (err: unknown, fallback = "unknown error") =>
@@ -59,9 +58,7 @@ export function useGeneration({
   const [generatedAssets, setGeneratedAssets] = useState<
     GeneratedAsset[] | null
   >(null);
-  const pollRef = useRef<ReturnType<
-    typeof setInterval
-  > | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const canGenerate =
     frontDesign !== null &&
@@ -80,8 +77,7 @@ export function useGeneration({
     new Promise((resolve, reject) => {
       pollRef.current = setInterval(async () => {
         try {
-          const batchStatus =
-            await batchService.getBatchStatus(jobId);
+          const batchStatus = await batchService.getBatchStatus(jobId);
           setProgress({
             completed: batchStatus.completed,
             total: batchStatus.total,
@@ -101,12 +97,7 @@ export function useGeneration({
       }, POLL_INTERVAL_MS);
     });
 
-  // Ends the run with a snackbar message; resets the progress bar. Used for both errors
-  // (severity "error") and soft failures like a missing video (severity "warning").
-  const finish = (
-    message: string,
-    severity: GeneratorStatus["severity"],
-  ) => {
+  const finish = (message: string, severity: GeneratorStatus["severity"]) => {
     setGenerating(false);
     setProgress({ completed: 0, total: 0 });
     setStatus({ open: true, message, severity });
@@ -125,7 +116,6 @@ export function useGeneration({
     setProgress({ completed: 0, total: 0 });
     setStatus({ open: true, message: "Starting batch…", severity: "info" });
 
-    // ---- 1. Start + poll the image batch ----
     let imageJobId: string;
     let imageStatus: BatchStatus;
     try {
@@ -152,10 +142,7 @@ export function useGeneration({
     try {
       imageStatus = await pollJobUntilTerminal(imageJobId);
     } catch {
-      return finish(
-        "Lost connection while checking batch progress.",
-        "error",
-      );
+      return finish("Lost connection while checking batch progress.", "error");
     }
 
     if (imageStatus.status === "FAILED") {
@@ -167,12 +154,10 @@ export function useGeneration({
       );
     }
 
-    // Images are available (DONE or PARTIAL).
     setGeneratedAssets(imageStatus.assets);
     const imageCount = imageStatus.uploadedCount;
     const images = `${imageCount} image asset${plural(imageCount)}`;
 
-    // ---- 2. Optionally generate the turntable video ----
     if (!video?.enabled) {
       if (imageStatus.status === "PARTIAL") {
         const fails = imageStatus.failedItems.length;
@@ -213,17 +198,11 @@ export function useGeneration({
     try {
       videoStatus = await pollJobUntilTerminal(videoJobId);
     } catch {
-      return finish(
-        "Lost connection while checking video progress.",
-        "error",
-      );
+      return finish("Lost connection while checking video progress.", "error");
     }
 
     if (videoStatus.status === "DONE" && videoStatus.assets) {
-      setGeneratedAssets((prev) => [
-        ...(prev ?? []),
-        ...videoStatus.assets!,
-      ]);
+      setGeneratedAssets((prev) => [...(prev ?? []), ...videoStatus.assets!]);
       return finish(
         `${images} + video generated in "${selectedProjectName}". Click to view.`,
         "success",
@@ -234,14 +213,14 @@ export function useGeneration({
       videoStatus.errorMessage ??
       videoStatus.failedItems[0]?.reason ??
       "unknown error";
-    return finish(`${images} generated, but the video failed: ${reason}`, "warning");
+    return finish(
+      `${images} generated, but the video failed: ${reason}`,
+      "warning",
+    );
   };
 
   const handleSnackbarClick = () => {
-    if (
-      status.severity === "success" ||
-      status.severity === "warning"
-    ) {
+    if (status.severity === "success" || status.severity === "warning") {
       router.push(
         selectedProjectId
           ? `/assets?projectId=${selectedProjectId}`
@@ -250,8 +229,7 @@ export function useGeneration({
     }
   };
 
-  const closeStatus = () =>
-    setStatus((s) => ({ ...s, open: false }));
+  const closeStatus = () => setStatus((s) => ({ ...s, open: false }));
 
   return {
     generating,

@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-} from "@mui/material";
+import { TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 
 type Resolution = "1k" | "2k" | "4k";
 type FrameOutputFormat = "png" | "jpeg";
@@ -16,23 +12,15 @@ interface AdvancedSettingsValues {
 
 interface AdvancedSettingsProps {
   values: AdvancedSettingsValues;
-  onChange: (
-    patch: Partial<AdvancedSettingsValues>,
-  ) => void;
+  onChange: (patch: Partial<AdvancedSettingsValues>) => void;
 }
 
-export function AdvancedSettings({
-  values,
-  onChange,
-}: AdvancedSettingsProps) {
-  const [resolution, setResolution] = useState<Resolution>(
-    values.resolution,
+export function AdvancedSettings({ values, onChange }: AdvancedSettingsProps) {
+  const [resolution, setResolution] = useState<Resolution>(values.resolution);
+  const [frameOutputFormat, setFrameOutputFormat] = useState<FrameOutputFormat>(
+    values.frameOutputFormat,
   );
-  const [frameOutputFormat, setFrameOutputFormat] =
-    useState<FrameOutputFormat>(values.frameOutputFormat);
-  const [prompt, setPrompt] = useState<string>(
-    values.prompt ?? "",
-  );
+  const [prompt, setPrompt] = useState<string>(values.prompt ?? "");
 
   useEffect(() => {
     setResolution(values.resolution);
@@ -71,34 +59,22 @@ export function AdvancedSettings({
                 border: 0,
                 borderRadius: 0,
               },
-              "& .MuiToggleButton-root + .MuiToggleButton-root":
-                {
-                  borderLeft: "1px solid rgb(229 231 235)",
-                },
+              "& .MuiToggleButton-root + .MuiToggleButton-root": {
+                borderLeft: "1px solid rgb(229 231 235)",
+              },
             }}
           >
-            <ToggleButton
-              value="1k"
-              className={buttonClasses}
-            >
+            <ToggleButton value="1k" className={buttonClasses}>
               1K
             </ToggleButton>
-            <ToggleButton
-              value="2k"
-              className={buttonClasses}
-            >
+            <ToggleButton value="2k" className={buttonClasses}>
               2K
             </ToggleButton>
-            <ToggleButton
-              value="4k"
-              className={buttonClasses}
-            >
+            <ToggleButton value="4k" className={buttonClasses}>
               4K
             </ToggleButton>
           </ToggleButtonGroup>
         </div>
-
-        {/* Frame format removed intentionally */}
 
         <div className="flex flex-col">
           <h3 className="mb-2 flex min-h-8 items-end text-xs font-bold uppercase tracking-[0.25em] text-gray-500">
@@ -122,22 +98,15 @@ export function AdvancedSettings({
                 border: 0,
                 borderRadius: 0,
               },
-              "& .MuiToggleButton-root + .MuiToggleButton-root":
-                {
-                  borderLeft: "1px solid rgb(229 231 235)",
-                },
+              "& .MuiToggleButton-root + .MuiToggleButton-root": {
+                borderLeft: "1px solid rgb(229 231 235)",
+              },
             }}
           >
-            <ToggleButton
-              value="png"
-              className={buttonClasses}
-            >
+            <ToggleButton value="png" className={buttonClasses}>
               PNG
             </ToggleButton>
-            <ToggleButton
-              value="jpeg"
-              className={buttonClasses}
-            >
+            <ToggleButton value="jpeg" className={buttonClasses}>
               JPEG
             </ToggleButton>
           </ToggleButtonGroup>
@@ -169,21 +138,19 @@ export function AdvancedSettings({
             "& .MuiOutlinedInput-notchedOutline": {
               borderColor: "rgb(229 231 235)",
             },
-            "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline":
-              {
-                borderColor: "rgb(209 213 219)",
-              },
-            "& .Mui-focused .MuiOutlinedInput-notchedOutline":
-              {
-                borderColor: "#e2001a",
-                borderWidth: "1px",
-              },
+            "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "rgb(209 213 219)",
+            },
+            "& .Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#e2001a",
+              borderWidth: "1px",
+            },
           }}
         />
         <p className="text-xs text-gray-400 mt-2">
-          The model and pose from the uploaded photo are kept as-is.
-          Use this only for small styling adjustments — leave it empty
-          for a faithful try-on.
+          The model and pose from the uploaded photo are kept as-is. Use this
+          only for small styling adjustments — leave it empty for a faithful
+          try-on.
         </p>
       </div>
     </div>

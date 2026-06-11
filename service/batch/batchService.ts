@@ -1,13 +1,5 @@
-import {
-  authHeaders,
-  getJson,
-  postForJobId,
-} from "@/service/http/jobClient";
-import type {
-  BatchStatus,
-  Resolution,
-  FrameOutputFormat,
-} from "@/types/types";
+import { authHeaders, getJson, postForJobId } from "@/service/http/jobClient";
+import type { BatchStatus, Resolution, FrameOutputFormat } from "@/types/types";
 
 interface BatchSubmitParams {
   frontDesign: File;
@@ -31,15 +23,10 @@ class BatchService {
   }: BatchSubmitParams): Promise<{ jobId: string }> {
     const formData = new FormData();
     formData.append("frontDesign", frontDesign);
-    // NOTE: the back garment view is uploaded and required by the UI, but the current Fashn
-    // tryon-max model only consumes a single (front) product image — the backend accepts this
-    // part but does not yet use it. Kept for forward-compatibility with a back-aware model.
     formData.append("backDesign", backDesign);
     formData.append("modelId", String(modelId));
     formData.append("folderId", String(folderId));
 
-    // Sent as a single JSON part matching the backend AdvancedSettings schema:
-    // { resolution, outputFormat, prompt }. (Note: UI's `frameOutputFormat` -> `outputFormat`.)
     const advancedSettings = {
       resolution: options?.resolution,
       outputFormat: options?.frameOutputFormat,
@@ -71,8 +58,7 @@ class BatchService {
       throw new Error(
         "Job is not finished yet — please wait until generation completes.",
       );
-    if (!response.ok)
-      throw new Error("Failed to download batch results");
+    if (!response.ok) throw new Error("Failed to download batch results");
 
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);

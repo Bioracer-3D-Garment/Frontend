@@ -1,16 +1,14 @@
-@import 'tailwindcss' source(none);
+@import "tailwindcss" source(none);
 @source '../pages/**/*.{js,ts,jsx,tsx}';
 @source '../components/**/*.{js,ts,jsx,tsx}';
 
 @layer base {
-	/* Keeps viewport width stable when only one route scrolls (avoids navbar/content jumping sideways). */
-	html {
-		scrollbar-gutter: stable;
-	}
+  html {
+    scrollbar-gutter: stable;
+  }
 
-	body {
-		background: #ffffff;
-		color: #0a0a0a;
-	}
-
+  body {
+    background: #ffffff;
+    color: #0a0a0a;
+  }
 }

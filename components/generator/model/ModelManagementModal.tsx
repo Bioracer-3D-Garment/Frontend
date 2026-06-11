@@ -211,8 +211,6 @@ export function ModelManagementModal({
   };
 
   const handleBack = () => {
-    // If the model was created in step 1 but the user cancels before completing
-    // step 2, delete the incomplete record so it doesn't linger in the DB.
     if (isNewModelPending && editingId !== null) {
       onDelete(editingId).catch(() => {});
     }
@@ -243,7 +241,6 @@ export function ModelManagementModal({
         setForm((f) => ({ ...f, photos: { ...f.photos, [slot]: publicId } }));
       }
     } catch {
-      // Upload failed — clear the slot so the user can retry
       if (slot === "profilePhoto") {
         setForm((f) => ({ ...f, profilePhoto: null }));
       } else {
@@ -263,13 +260,11 @@ export function ModelManagementModal({
     form.photos.back &&
     form.photos.side
   );
-  // step 1 (add, no editingId yet): only name needed; step 2 or edit: name + all photos
   const isFormValid =
     editingId !== null ? !!form.name.trim() && photosValid : !!form.name.trim();
 
   const showNameError = submitAttempted && !form.name.trim();
 
-  // create the model record to get its real DB id, then advance.
   const handleCreate = async () => {
     setSubmitAttempted(true);
     if (!form.name.trim()) return;
@@ -294,7 +289,6 @@ export function ModelManagementModal({
     }
   };
 
-  // save photos + details via PUT.
   const handleSave = async () => {
     setSubmitAttempted(true);
     if (!isFormValid || anyUploading || editingId === null) return;
@@ -454,7 +448,6 @@ export function ModelManagementModal({
               </div>
             )}
 
-            {/* Name — visible in step 1 (add, editingId null) or edit (!isNewModelPending) */}
             {!isNewModelPending && (
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -482,7 +475,6 @@ export function ModelManagementModal({
               </div>
             )}
 
-            {/* Gender — visible in step 1 (add, editingId null) or edit (!isNewModelPending) */}
             {!isNewModelPending && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -512,7 +504,6 @@ export function ModelManagementModal({
               </div>
             )}
 
-            {/* Photos — visible in step 2 (isNewModelPending) or edit (editingId set, not pending) */}
             {editingId !== null && (
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -561,7 +552,6 @@ export function ModelManagementModal({
             Cancel
           </Button>
 
-          {/* Step 1 (add mode): Create makes the DB record and advances */}
           {editingId === null && formStep === 1 ? (
             <Button
               onClick={handleCreate}
@@ -577,7 +567,6 @@ export function ModelManagementModal({
               Next
             </Button>
           ) : (
-            /* Step 2 (add) or any edit: Save/Add button */
             <Button
               onClick={handleSave}
               variant="contained"

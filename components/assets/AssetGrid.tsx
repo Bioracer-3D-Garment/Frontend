@@ -74,10 +74,9 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                         poster={asset.thumbnail || undefined}
                         controls
                         playsInline
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={
                           process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +

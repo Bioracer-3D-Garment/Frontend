@@ -30,8 +30,5 @@ export async function uploadImage(
 
   if (!response.ok) throw new Error("Failed to upload image");
   const data = await response.json();
-  // Return the Cloudinary public ID (e.g. "model_3_front"), not the secure URL.
-  // The model's front/back/side fields must hold public IDs so the generation
-  // pipeline (CloudinaryService.download) and <CldImage> can resolve them.
   return data.publicId as string;
 }

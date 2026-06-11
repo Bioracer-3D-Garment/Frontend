@@ -1,22 +1,15 @@
-import { Typography } from '@mui/material';
+import { Typography } from "@mui/material";
 
 export function LoginShowcasePanel() {
   return (
     <div className="relative hidden lg:block">
       <img
-        src="https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=1400&h=1800&fit=crop"
+        src="https://www2.bioracer.com/wp-content/uploads/2024/08/Homepage-Banner-Remco-BOIC-2.webp"
         alt="Cycling"
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
-      <div className="absolute bottom-12 left-12 right-12 text-white">
-        <div className="inline-block bg-[#e2001a] px-3 py-1 mb-4 text-xs tracking-[0.2em] font-bold">
-          DESIGNED FOR PERFORMANCE
-        </div>
-        <Typography variant="h4" className="font-extrabold leading-snug">
-          Premium 3D visuals for cycling apparel.
-        </Typography>
-      </div>
+      <div className="absolute bottom-12 left-12 right-12 text-white"></div>
     </div>
   );
 }

@@ -12,9 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Asset } from "@/types/types";
 
 interface AssetPreviewDialogProps {
-  // The list of assets that can be navigated between in the preview.
   assets: Asset[];
-  // Index of the currently previewed asset, or null when the dialog is closed.
   index: number | null;
   onClose: () => void;
   onNavigate: (nextIndex: number) => void;
@@ -45,18 +43,13 @@ export function AssetPreviewDialog({
   const hasPrev = index !== null && index > 0;
   const hasNext = index !== null && index < assets.length - 1;
   const isImage = asset?.type !== "video";
-
-  // Zoom level and pan offset (in pixels) applied to the previewed image.
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  // Removes the currently attached wheel listener, if any.
   const detachWheelRef = useRef<(() => void) | null>(null);
-  // Latest `isImage` value, read inside the (long-lived) wheel listener.
   const isImageRef = useRef(isImage);
   useEffect(() => {
     isImageRef.current = isImage;
   }, [isImage]);
-  // Active drag-to-pan gesture, or null when not panning.
   const dragRef = useRef<{
     startX: number;
     startY: number;
@@ -69,14 +62,10 @@ export function AssetPreviewDialog({
     setScale(1);
     setOffset({ x: 0, y: 0 });
   }, []);
-
-  // Reset zoom/pan on close so the next time the dialog opens it starts fit.
   const handleClose = useCallback(() => {
     resetZoom();
     onClose();
   }, [resetZoom, onClose]);
-
-  // Reset zoom/pan when moving to another asset so each starts fit-to-view.
   const goPrev = useCallback(() => {
     if (index !== null && hasPrev) {
       resetZoom();
@@ -90,9 +79,6 @@ export function AssetPreviewDialog({
       onNavigate(index + 1);
     }
   }, [index, hasNext, onNavigate, resetZoom]);
-
-  // Zoom around a focal point (relative to the viewport center) so the pixel
-  // under the cursor stays put. When no point is given, zoom around the center.
   const zoomBy = useCallback((delta: number, focalX = 0, focalY = 0) => {
     setScale((prevScale) => {
       const nextScale = clampScale(prevScale + delta);
@@ -112,10 +98,6 @@ export function AssetPreviewDialog({
     });
   }, []);
 
-  // Attach the wheel-to-zoom listener via a callback ref so it binds exactly
-  // when the viewport node mounts inside MUI's Dialog portal. A native,
-  // non-passive listener is required so we can preventDefault and stop the
-  // page/dialog from scrolling while zooming (React's onWheel is passive).
   const attachViewport = useCallback(
     (node: HTMLDivElement | null) => {
       detachWheelRef.current?.();
@@ -128,8 +110,6 @@ export function AssetPreviewDialog({
         const rect = node.getBoundingClientRect();
         const focalX = e.clientX - rect.left - rect.width / 2;
         const focalY = e.clientY - rect.top - rect.height / 2;
-        // Each notch is a gentle, fixed step regardless of the reported delta
-        // (mice report large deltaY; trackpads small) — only direction matters.
         const direction = e.deltaY > 0 ? -1 : 1;
         zoomBy(direction * ZOOM_STEP * 1.5, focalX, focalY);
       };
@@ -282,7 +262,6 @@ export function AssetPreviewDialog({
               className="max-h-[80vh] max-w-full"
             />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imageUrl(asset)}
               alt={`${asset.clothing} ${asset.model}`}
