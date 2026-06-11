@@ -171,7 +171,11 @@ export default function GeneratorPage() {
                     className="shrink-0 w-32 rounded overflow-hidden bg-gray-100 border border-gray-200"
                   >
                     <img
-                      src={asset.thumbnailUrl}
+                      src={
+                        process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                        "/files/" +
+                        asset.publicId
+                      }
                       alt={`${asset.productId} · ${asset.poseId}`}
                       className="w-full h-32 object-cover"
                     />

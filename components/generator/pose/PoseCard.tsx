@@ -1,6 +1,6 @@
-import { Typography } from '@mui/material';
-import { Check, Person } from '@mui/icons-material';
-import type { PoseOption } from '@/types/types';
+import { Typography } from "@mui/material";
+import { Check, Person } from "@mui/icons-material";
+import type { PoseOption } from "@/types/types";
 
 interface PoseCardProps {
   pose: PoseOption;
@@ -15,8 +15,8 @@ export function PoseCard({ pose, onToggle }: PoseCardProps) {
       aria-pressed={pose.selected}
       className={`group relative flex flex-col w-full overflow-hidden rounded-[1.4rem] border text-left transition-all duration-200 ${
         pose.selected
-          ? 'border-[#e2001a] bg-white shadow-[0_10px_24px_rgba(226,0,26,0.08)] ring-1 ring-[#e2001a]/15'
-          : 'border-gray-100 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.03)] hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]'
+          ? "border-[#e2001a] bg-white shadow-[0_10px_24px_rgba(226,0,26,0.08)] ring-1 ring-[#e2001a]/15"
+          : "border-gray-100 bg-white shadow-[0_4px_14px_rgba(15,23,42,0.03)] hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
       }`}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent" />
@@ -46,7 +46,9 @@ export function PoseCard({ pose, onToggle }: PoseCardProps) {
         <Typography variant="body2" className="font-semibold text-black">
           {pose.label}
         </Typography>
-        <span className={`inline-flex h-2 w-2 rounded-full ${pose.selected ? 'bg-[#e2001a]' : 'bg-gray-300'}`} />
+        <span
+          className={`inline-flex h-2 w-2 rounded-full ${pose.selected ? "bg-[#e2001a]" : "bg-gray-300"}`}
+        />
       </div>
     </button>
   );

@@ -152,7 +152,7 @@ export function UserLoginForm({
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-bold py-3 rounded-md"
+          className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-bold py-3 rounded-md hover:cursor-pointer"
         >
           {submitting ? "Signing in…" : submitLabel}
         </button>
