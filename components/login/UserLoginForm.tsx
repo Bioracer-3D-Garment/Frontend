@@ -117,9 +117,6 @@ export function UserLoginForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
-        <input type="email" name="fakeuser" style={{ display: "none" }} />
-        <input type="password" name="fakepass" style={{ display: "none" }} />
-
         <label className="block">
           <span className="text-sm font-medium text-gray-700">
             {emailLabel}

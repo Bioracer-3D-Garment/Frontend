@@ -42,9 +42,7 @@ export function LoginFormPanel(props: LoginFormPanelProps) {
         </Typography>
       </div>
 
-      <Typography variant="caption" className="text-gray-400">
-        © {new Date().getFullYear()} Bioracer Studio
-      </Typography>
+      <Typography variant="caption" className="text-gray-400"></Typography>
     </div>
   );
 }
