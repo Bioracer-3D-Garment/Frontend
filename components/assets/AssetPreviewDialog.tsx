@@ -254,8 +254,12 @@ export function AssetPreviewDialog({
         >
           {asset.type === "video" ? (
             <video
-              src={asset.secureUrl}
-              poster={asset.thumbnail || undefined}
+              src={imageUrl(asset)}
+              poster={
+                process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                  "/files/" +
+                  asset.thumbnail || undefined
+              }
               controls
               autoPlay
               playsInline

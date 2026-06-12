@@ -23,7 +23,9 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   const handleDownload = async (asset: Asset) => {
-    const response = await fetch(asset.secureUrl);
+    const response = await fetch(
+      process.env.NEXT_PUBLIC_PYTHON_SERVER_URL + "/files/" + asset.publicId,
+    );
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -70,8 +72,16 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                   <div className="relative aspect-square bg-gray-100 overflow-hidden">
                     {asset.type === "video" ? (
                       <video
-                        src={asset.secureUrl}
-                        poster={asset.thumbnail || undefined}
+                        src={
+                          process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                          "/files/" +
+                          asset.publicId
+                        }
+                        poster={
+                          process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                            "/files/" +
+                            asset.thumbnail || undefined
+                        }
                         controls
                         playsInline
                         className="w-full h-full object-contain"

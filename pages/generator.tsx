@@ -170,15 +170,28 @@ export default function GeneratorPage() {
                     key={asset.id}
                     className="shrink-0 w-32 rounded overflow-hidden bg-gray-100 border border-gray-200"
                   >
-                    <img
-                      src={
-                        process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
-                        "/files/" +
-                        asset.publicId
-                      }
-                      alt={`${asset.productId} · ${asset.poseId}`}
-                      className="w-full h-32 object-cover"
-                    />
+                    {asset.poseId == "video" && (
+                      <img
+                        src={
+                          process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                          "/files/" +
+                          asset.thumbnailUrl
+                        }
+                        alt={`${asset.productId} · ${asset.poseId}`}
+                        className="w-full h-32 object-cover"
+                      />
+                    )}
+                    {asset.poseId != "video" && (
+                      <img
+                        src={
+                          process.env.NEXT_PUBLIC_PYTHON_SERVER_URL +
+                          "/files/" +
+                          asset.publicId
+                        }
+                        alt={`${asset.productId} · ${asset.poseId}`}
+                        className="w-full h-32 object-cover"
+                      />
+                    )}
                     <div className="px-2 py-1">
                       <Typography
                         variant="caption"
